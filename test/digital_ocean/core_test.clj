@@ -8,3 +8,6 @@
 (facts "about generatoring query params"
   (core/make-query-params "A" "B") => "?client_id=A&api_key=B"
   (core/make-query-params "A" "B" {"C" "D"}) => "?client_id=A&api_key=B&C=D")
+
+(facts "about url-with-params"
+  (core/url-with-params "droplets" "A" "B" {"C" "D"}) => "https://api.digitalocean.com/droplets?client_id=A&api_key=B&C=D")
