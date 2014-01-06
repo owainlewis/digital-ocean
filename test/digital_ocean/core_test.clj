@@ -10,7 +10,8 @@
   (core/make-query-params "A" "B" {"C" "D"}) => "?client_id=A&api_key=B&C=D")
 
 (facts "about url-with-params"
-  (core/url-with-params "droplets" "A" "B" {"C" "D"}) => "https://api.digitalocean.com/droplets?client_id=A&api_key=B&C=D")
+  (core/url-with-params "droplets" "A" "B" {"C" "D"})
+    => "https://api.digitalocean.com/droplets?client_id=A&api_key=B&C=D")
 
 (facts "about requests with incorrect credentials"
   (core/request "droplets" "FOO" "BAR") =>
