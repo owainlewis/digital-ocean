@@ -10,6 +10,10 @@
   "Fetch an env var"
   [k] (System/getenv k))
 
+(defn make-creds
+  [client api-key]
+  { :client client :key api-key })
+
 (defn creds []
   { :client (env "DO_CLIENT")
     :key    (env "DO_KEY") })
@@ -62,9 +66,16 @@
    Returns err message if there is an error
    else applies arrow threading to the response"
   [response & forms]
-  `(if (contains? ~response :error)
+  `(if-not (contains? ~response :error)
      (->> ~response ~@forms)
      ~response))
+
+(defn get-for
+  "Helper function/abstraction to reduce duplication"
+  ([resource client-id api-key]
+  (let [k (keyword resource)]
+    (->>> (request resource client-id api-key)
+          k))))
 
 (defn enforce-params
   "Helper which throws assertion error if required params are
@@ -79,16 +90,19 @@
 
 (defn droplets
   "Returns all droplets"
-  [client-id api-key]
-  (->>> (request "droplets" client-id api-key)
-        :droplets))
+  ([client-id api-key]
+    (get-for "droplets" client-id api-key))
+  ([creds]
+    (apply droplets (vals creds))))
 
  (defn droplet
    "Get a single droplet"
-   [client-id api-key id]
-   (->>>
-     (request (str "droplets/" id) client-id api-key)
-     :droplet))
+   ([client-id api-key id]
+   (->>> (request (str "droplets/" id) client-id api-key)
+         :droplet))
+   ([creds id]
+     (apply droplet
+       (conj (into [] (vals c)) id))))
 
 (defn new-droplet
   "Create a new droplet
@@ -113,32 +127,46 @@
     :regions))
 
 (defn region-ids
-  [client-id api-key]
-  (->> (regions client-id api-key) (map :id)))
+  ([client-id api-key]
+    (regions client-id api-key))
+  ([creds]
+    (apply region-ids (vals creds))))
 
 ;; Regions
 ;; ****************************************
 
-(defn images [client-id api-key]
-  (->>> (request "images" client-id api-key)
-        :images))
+(defn images
+  ([client-id api-key]
+    (get-for "images" client-id api-key))
+  ([creds]
+    (apply images (vals creds))))
 
 ;; SSH Keys
 ;; ****************************************
 
-(defn ssh-keys [client-id api-key]
-  )
+(defn ssh-keys
+  ([client-id api-key]
+    (get-for "ssh_keys" client-id api-key))
+  ([creds]
+    (apply ssh-keys (vals creds))))
 
 ;; Sizes
 ;; ****************************************
 
-(defn sizes [client-id api-key]
-)
+(defn sizes
+  ([client-id api-key]
+    (get-for "sizes" client-id api-key))
+  ([creds]
+    (apply sizes (vals creds))))
 
 ;; Domains
 ;; ****************************************
 
-(defn domains [client-id api-key])
+(defn domains
+  ([client-id api-key]
+    (get-for "domains" client-id api-key))
+  ([creds]
+    (apply domains (vals creds))))
 
 ;; Events
 ;; ****************************************
