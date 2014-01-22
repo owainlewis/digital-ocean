@@ -4,13 +4,14 @@
   (:require [cheshire.core :as json]
             [org.httpkit.client :as http]))
 
-(def do "https://api.digitalocean.com")
+(defonce do "https://api.digitalocean.com")
 
 (defn env
   "Fetch an env var"
   [k] (System/getenv k))
 
 (defn make-creds
+  "Utility function for building a credentials map"
   [client api-key]
   { :client client :key api-key })
 
@@ -22,7 +23,7 @@
 ;; **************************************************************
 
 (defn url-encode-params
-  ""
+  "Utility function for url encoding HTTP form params"
   [params-map]
   (into {}
     (for [[k v] params-map]
@@ -120,13 +121,14 @@
 ;; ****************************************
 
 (defn regions
-  "Fetch all regions"
+  "Fetch all Digital Ocean regions"
   [client-id api-key]
   (->>>
     (request "regions" client-id api-key)
     :regions))
 
 (defn region-ids
+  "Returns all Digital Ocean region ids"
   ([client-id api-key]
     (regions client-id api-key))
   ([creds]
@@ -136,6 +138,7 @@
 ;; ****************************************
 
 (defn images
+  "List all Digital Ocean images"
   ([client-id api-key]
     (get-for "images" client-id api-key))
   ([creds]
@@ -145,6 +148,7 @@
 ;; ****************************************
 
 (defn ssh-keys
+  "Fetch all SSH keys for your account"
   ([client-id api-key]
     (get-for "ssh_keys" client-id api-key))
   ([creds]
@@ -154,6 +158,7 @@
 ;; ****************************************
 
 (defn sizes
+  "Return all instance sizes"
   ([client-id api-key]
     (get-for "sizes" client-id api-key))
   ([creds]
@@ -163,6 +168,7 @@
 ;; ****************************************
 
 (defn domains
+  "Return all domains for your digital ocean account"
   ([client-id api-key]
     (get-for "domains" client-id api-key))
   ([creds]
