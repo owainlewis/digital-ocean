@@ -8,14 +8,25 @@ Clojure interface for Digital Ocean
 
 All methods require a client-id and api-key that can be found in your Digital Ocean Account under the API tab.
 
+Most functions are variadic and will accept a creds map to make things easier
+
 ```clojure
 (ns myns
-  (:require [digital-ocean.core]))
-
+  (:require [digital-ocean.core :refer :all]))
 (def client-id "YOUR_CLIENT_ID")
 (def api-key "YOUR_KEY")
 
 (droplets client-id api-key)
+```
+
+Or using a creds map
+
+```clojure
+;; variadic style
+
+(def creds {:client "BLAH" :key "BLAH"})
+
+(droplets creds)
 ```
 
 ## Droplets
@@ -24,6 +35,7 @@ All droplets for your account
 
 ```clojure
 (droplets client-id api-key)
+
 ```
 
 Get a single droplet

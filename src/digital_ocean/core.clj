@@ -105,6 +105,24 @@
      (apply droplet
        (conj (into [] (vals c)) id))))
 
+(defn lookup-droplet-ip
+  ([client-id api-key droplet-id]
+  (->> (droplet client-id api-key droplet-id)
+       :ip_address)))
+
+(defn droplet-by-name
+  "Case sensitive name lookup"
+  ([client-id api-key droplet-name]
+    (let [droplets (droplets client-id api-key)]
+      (reduce
+        (fn [acc droplet]
+          (if (= (:name droplet) droplet-name)
+            (conj acc droplet)
+              acc)) [] droplets)))
+    ([creds droplet-name]
+      (let [[k t] ((juxt :client :key) creds)]
+        (droplet-by-name k t droplet-name))))
+
 (defn new-droplet
   "Create a new Digital Ocean droplet. Droplets params is a simple map
    Required params
@@ -117,6 +135,24 @@
     (enforce-params droplet-params :name :size_id :image_id :region_id)
     (request "droplets/new" client-id api-key
       droplet-params))))
+
+(defn droplet-url
+  "Utility function to reduce duplication"
+  [id action]
+  (apply format "droplets/%s/%s" [id action]))
+
+(defn reboot-droplet
+  ([client-id api-key droplet-id]
+    (request (droplet-url droplet-id "reboot")
+      client-id  api-key))
+  ([creds droplet-id]
+    (let [[k t] ((juxt :client :key) creds)]
+      (reboot-droplet k t droplet-id))))
+
+(defn shutdown-droplet
+  "Power off a Digital Ocean droplet"
+  [client-id api-key droplet-id]
+  )
 
 ;; Regions
 ;; ****************************************
