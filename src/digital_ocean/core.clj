@@ -106,16 +106,17 @@
        (conj (into [] (vals c)) id))))
 
 (defn new-droplet
-  "Create a new droplet
+  "Create a new Digital Ocean droplet. Droplets params is a simple map
    Required params
      :name
      :size_id
      :image_id
      :region_id"
-  [client-id api-key params]
-  (enforce-params params :name :size_id :image_id :region_id)
-  (request "droplets/new" client-id api-key
-    {:name "New droplet"}))
+  [client-id api-key droplet-params]
+  (when (map? droplet-params
+    (enforce-params droplet-params :name :size_id :image_id :region_id)
+    (request "droplets/new" client-id api-key
+      droplet-params))))
 
 ;; Regions
 ;; ****************************************
