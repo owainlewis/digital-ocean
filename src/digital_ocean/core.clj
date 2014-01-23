@@ -4,7 +4,7 @@
   (:require [cheshire.core :as json]
             [org.httpkit.client :as http]))
 
-(defonce do "https://api.digitalocean.com")
+(defonce digital-ocean "https://api.digitalocean.com")
 
 (defn env
   "Fetch an env var"
@@ -44,7 +44,7 @@
 (defn url-with-params
   [endpoint client-id api-key & params]
   (let [query-params (make-query-params client-id api-key (into {} params))
-        url (format "%s/%s%s" do endpoint query-params)]
+        url (format "%s/%s%s" digital-ocean endpoint query-params)]
     url))
 
 ;; HTTP request
