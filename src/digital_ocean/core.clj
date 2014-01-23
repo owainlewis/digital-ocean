@@ -148,18 +148,17 @@
     (request "droplets/new" client-id api-key
       droplet-params))))
 
+(defn new-small-instance-test [client-id api-key]
+    (new-droplet client-id api-key
+      {:name "Demo"
+       :size_id "66"
+       :image_id "1989574"
+       :region_id "1"}))
+
 (defn droplet-url
   "Utility function to reduce duplication"
   [id action]
   (apply format "droplets/%s/%s" [id action]))
-
-(defn reboot-droplet
-  ([client-id api-key droplet-id]
-    (request (droplet-url droplet-id "reboot")
-      client-id  api-key))
-  ([creds droplet-id]
-    (let [[k t] ((juxt :client :key) creds)]
-      (reboot-droplet k t droplet-id))))
 
 (defn generic-droplet-action [action args]
   (let [f (fn ([client-id api-key droplet-id]
@@ -170,6 +169,14 @@
 		  (request (droplet-url droplet-id action) k t))))]
     (apply f args)))
 
+(defn reboot-droplet
+  ([client-id api-key droplet-id]
+    (request (droplet-url droplet-id "reboot")
+      client-id  api-key))
+  ([creds droplet-id]
+    (let [[k t] ((juxt :client :key) creds)]
+      (reboot-droplet k t droplet-id))))
+
 (defn shutdown-droplet
   [& args]
   "Power off a Digital Ocean droplet"
@@ -177,31 +184,22 @@
 
 (defn power-off-droplet
   "Power off a Digital Ocean droplet"
-  ([client-id api-key droplet-id]
-    (let [url (droplet-url droplet-id "power_off")]
-      (request url client-id api-key)))
-  ([creds droplet-id]
-    (let [[k t] ((juxt :client :key) creds)]
-      (power-off-droplet k t droplet-id))))
+  [& args] (generic-droplet-action "power_off" (into [] args)))
 
 (defn power-on-droplet
   "Power off a Digital Ocean droplet"
-  ([client-id api-key droplet-id]
-    (let [url (droplet-url droplet-id "power_on")]
-      (request url client-id api-key)))
-  ([creds droplet-id]
-    (let [[k t] ((juxt :client :key) creds)]
-      (power-on-droplet k t droplet-id))))
+  [& args] (generic-droplet-action "power_on" (into [] args)))
 
 ;; Regions
 ;; ****************************************
 
 (defn regions
   "Fetch all Digital Ocean regions"
-  [client-id api-key]
+  ([client-id api-key]
   (->>>
     (request "regions" client-id api-key)
     :regions))
+  ([creds] (apply regions (vals creds))))
 
 (defn region-ids
   "Returns all Digital Ocean region ids"
@@ -210,7 +208,7 @@
   ([creds]
     (apply region-ids (vals creds))))
 
-;; Regions
+;; Images
 ;; ****************************************
 
 (defn images
@@ -219,6 +217,9 @@
     (get-for "images" client-id api-key))
   ([creds]
     (apply images (vals creds))))
+
+(defn boot-server-from-existing-image [image-id]
+  )
 
 ;; SSH Keys
 ;; ****************************************
