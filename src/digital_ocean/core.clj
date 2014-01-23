@@ -2,7 +2,7 @@
   ^{:doc "A Clojure wrapper for the Digital Ocean API"
     :author "Owain Lewis"}
   (:require [cheshire.core :as json]
-            [org.httpkit.client :as http]))
+	    [org.httpkit.client :as http]))
 
 (defonce digital-ocean "https://api.digitalocean.com")
 
@@ -33,10 +33,10 @@
   "Build query params"
   [client-id api-key & params]
   (let [base-params  (format "?client_id=%s&api_key=%s" client-id api-key)
-        extra-params (apply str
-                       (for [[k v] (url-encode-params (into {} params))]
-                         (str "&" (if (keyword? k)
-                                    (name k) k) "=" v)))]
+	extra-params (apply str
+		       (for [[k v] (url-encode-params (into {} params))]
+			 (str "&" (if (keyword? k)
+				    (name k) k) "=" v)))]
     (if (clojure.string/blank? extra-params)
       base-params
       (format "%s%s" base-params extra-params))))
@@ -44,7 +44,7 @@
 (defn url-with-params
   [endpoint client-id api-key & params]
   (let [query-params (make-query-params client-id api-key (into {} params))
-        url (format "%s/%s%s" digital-ocean endpoint query-params)]
+	url (format "%s/%s%s" digital-ocean endpoint query-params)]
     url))
 
 ;; HTTP request
@@ -55,7 +55,7 @@
    for this particular API"
   [endpoint client-id api-key & params]
   (let [url (url-with-params endpoint client-id api-key (into {} params))
-        {:keys [status headers body error] :as resp} @(http/get url)]
+	{:keys [status headers body error] :as resp} @(http/get url)]
     (if error
       {:error error}
       (json/parse-string body true))))
@@ -76,7 +76,7 @@
   ([resource client-id api-key]
   (let [k (keyword resource)]
     (->>> (request resource client-id api-key)
-          k))))
+	  k))))
 
 (defn enforce-params
   "Helper which throws assertion error if required params are
@@ -96,14 +96,26 @@
   ([creds]
     (apply droplets (vals creds))))
 
- (defn droplet
-   "Get a single droplet"
-   ([client-id api-key id]
-   (->>> (request (str "droplets/" id) client-id api-key)
-         :droplet))
-   ([creds id]
-     (apply droplet
-       (conj (into [] (vals c)) id))))
+(defn droplets-with-status
+  ([client-id api-key status]
+    (filter (fn [droplet]
+	      (= (:status droplet)
+		 (if (keyword status)
+		   (name status)
+		     status)))
+      (droplets client-id api-key)))
+  ([creds status]
+    (let [[k t] ((juxt :client :key) creds)]
+      (droplets-with-status k t status))))
+
+(defn droplet
+  "Get a single droplet"
+  ([client-id api-key id]
+  (->>> (request (str "droplets/" id) client-id api-key)
+	:droplet))
+  ([creds id]
+    (apply droplet
+      (conj (into [] (vals creds)) id))))
 
 (defn lookup-droplet-ip
   ([client-id api-key droplet-id]
@@ -115,13 +127,13 @@
   ([client-id api-key droplet-name]
     (let [droplets (droplets client-id api-key)]
       (reduce
-        (fn [acc droplet]
-          (if (= (:name droplet) droplet-name)
-            (conj acc droplet)
-              acc)) [] droplets)))
+	(fn [acc droplet]
+	  (if (= (:name droplet) droplet-name)
+	    (conj acc droplet)
+	      acc)) [] droplets)))
     ([creds droplet-name]
       (let [[k t] ((juxt :client :key) creds)]
-        (droplet-by-name k t droplet-name))))
+	(droplet-by-name k t droplet-name))))
 
 (defn new-droplet
   "Create a new Digital Ocean droplet. Droplets params is a simple map
@@ -149,10 +161,37 @@
     (let [[k t] ((juxt :client :key) creds)]
       (reboot-droplet k t droplet-id))))
 
+(defn generic-droplet-action [action args]
+  (let [f (fn ([client-id api-key droplet-id]
+		(let [url (droplet-url droplet-id action)]
+		  (request url client-id api-key)))
+	      ([creds droplet-id]
+		(let [[k t] ((juxt :client :key) creds)]
+		  (request (droplet-url droplet-id action) k t))))]
+    (apply f args)))
+
 (defn shutdown-droplet
+  [& args]
   "Power off a Digital Ocean droplet"
-  [client-id api-key droplet-id]
-  )
+  (generic-droplet-action "shutdown" (into [] args)))
+
+(defn power-off-droplet
+  "Power off a Digital Ocean droplet"
+  ([client-id api-key droplet-id]
+    (let [url (droplet-url droplet-id "power_off")]
+      (request url client-id api-key)))
+  ([creds droplet-id]
+    (let [[k t] ((juxt :client :key) creds)]
+      (power-off-droplet k t droplet-id))))
+
+(defn power-on-droplet
+  "Power off a Digital Ocean droplet"
+  ([client-id api-key droplet-id]
+    (let [url (droplet-url droplet-id "power_on")]
+      (request url client-id api-key)))
+  ([creds droplet-id]
+    (let [[k t] ((juxt :client :key) creds)]
+      (power-on-droplet k t droplet-id))))
 
 ;; Regions
 ;; ****************************************
