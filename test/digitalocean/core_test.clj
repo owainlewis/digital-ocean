@@ -1,6 +1,6 @@
-(ns digital-ocean.core-test
+(ns digitalocean.core-test
   (:use midje.sweet)
-  (:require [digital-ocean.core :as core]))
+  (:require [digitalocean.core :as core]))
 
 (facts "about url encoding params"
   (core/url-encode-params {:name "A B"}) => {:name "A+B"})

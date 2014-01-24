@@ -1,8 +1,8 @@
-(ns digital-ocean.core
+(ns digitalocean.core
   ^{:doc "A Clojure wrapper for the Digital Ocean API"
     :author "Owain Lewis"}
   (:require [cheshire.core :as json]
-	    [org.httpkit.client :as http]))
+            [org.httpkit.client :as http]))
 
 (defonce digital-ocean "https://api.digitalocean.com")
 
@@ -33,10 +33,10 @@
   "Build query params"
   [client-id api-key & params]
   (let [base-params  (format "?client_id=%s&api_key=%s" client-id api-key)
-	extra-params (apply str
-		       (for [[k v] (url-encode-params (into {} params))]
-			 (str "&" (if (keyword? k)
-				    (name k) k) "=" v)))]
+        extra-params (apply str
+                       (for [[k v] (url-encode-params (into {} params))]
+                         (str "&" (if (keyword? k)
+                                    (name k) k) "=" v)))]
     (if (clojure.string/blank? extra-params)
       base-params
       (format "%s%s" base-params extra-params))))
@@ -44,7 +44,7 @@
 (defn url-with-params
   [endpoint client-id api-key & params]
   (let [query-params (make-query-params client-id api-key (into {} params))
-	url (format "%s/%s%s" digital-ocean endpoint query-params)]
+        url (format "%s/%s%s" digital-ocean endpoint query-params)]
     url))
 
 ;; HTTP request
@@ -55,7 +55,7 @@
    for this particular API"
   [endpoint client-id api-key & params]
   (let [url (url-with-params endpoint client-id api-key (into {} params))
-	{:keys [status headers body error] :as resp} @(http/get url)]
+        {:keys [status headers body error] :as resp} @(http/get url)]
     (if error
       {:error error}
       (json/parse-string body true))))
@@ -76,7 +76,7 @@
   ([resource client-id api-key]
   (let [k (keyword resource)]
     (->>> (request resource client-id api-key)
-	  k))))
+          k))))
 
 (defn enforce-params
   "Helper which throws assertion error if required params are
@@ -85,6 +85,31 @@
   (let [f (partial contains? params-map)]
     (assert
       (every? true? (map f (into [] keys))))))
+
+(defn pluralize [n s]
+  (if (= 1 n) s (str s "s")))
+
+(defmacro when-params
+  "Takes a map {:a 1 :b 2} and a vector of required keys
+   If any required keys are missing an exception is thrown
+   else proceed with the computation"
+  [subject-map keys & body]
+  `(let [f# (partial contains? ~subject-map)]
+     (if (every? true?
+           (map f# ~keys))
+       (do ~@body)
+         (let [missing-params#
+                (into []
+                  (clojure.set/difference
+                    (set ~keys)
+                    (set (keys ~subject-map))))
+               key-list# (apply str
+                           (map name
+                             (interpose " " ~keys)))
+               msg# (format "Missing required %s %s"
+                      (pluralize (count missing-params#) "param")
+                        missing-params#)]
+           (throw (Exception. msg#))))))
 
 ;; Droplets
 ;; ****************************************
@@ -99,10 +124,10 @@
 (defn droplets-with-status
   ([client-id api-key status]
     (filter (fn [droplet]
-	      (= (:status droplet)
-		 (if (keyword status)
-		   (name status)
-		     status)))
+              (= (:status droplet)
+                 (if (keyword status)
+                   (name status)
+                     status)))
       (droplets client-id api-key)))
   ([creds status]
     (let [[k t] ((juxt :client :key) creds)]
@@ -112,7 +137,7 @@
   "Get a single droplet"
   ([client-id api-key id]
   (->>> (request (str "droplets/" id) client-id api-key)
-	:droplet))
+        :droplet))
   ([creds id]
     (apply droplet
       (conj (into [] (vals creds)) id))))
@@ -127,13 +152,13 @@
   ([client-id api-key droplet-name]
     (let [droplets (droplets client-id api-key)]
       (reduce
-	(fn [acc droplet]
-	  (if (= (:name droplet) droplet-name)
-	    (conj acc droplet)
-	      acc)) [] droplets)))
+        (fn [acc droplet]
+          (if (= (:name droplet) droplet-name)
+            (conj acc droplet)
+              acc)) [] droplets)))
     ([creds droplet-name]
       (let [[k t] ((juxt :client :key) creds)]
-	(droplet-by-name k t droplet-name))))
+        (droplet-by-name k t droplet-name))))
 
 (defn new-droplet
   "Create a new Digital Ocean droplet. Droplets params is a simple map
@@ -143,10 +168,10 @@
      :image_id
      :region_id"
   [client-id api-key droplet-params]
-  (when (map? droplet-params
+  (when (map? droplet-params)
     (enforce-params droplet-params :name :size_id :image_id :region_id)
     (request "droplets/new" client-id api-key
-      droplet-params))))
+      droplet-params)))
 
 (defn new-small-instance-test [client-id api-key]
     (new-droplet client-id api-key
@@ -162,11 +187,11 @@
 
 (defn generic-droplet-action [action args]
   (let [f (fn ([client-id api-key droplet-id]
-		(let [url (droplet-url droplet-id action)]
-		  (request url client-id api-key)))
-	      ([creds droplet-id]
-		(let [[k t] ((juxt :client :key) creds)]
-		  (request (droplet-url droplet-id action) k t))))]
+                (let [url (droplet-url droplet-id action)]
+                  (request url client-id api-key)))
+              ([creds droplet-id]
+                (let [[k t] ((juxt :client :key) creds)]
+                  (request (droplet-url droplet-id action) k t))))]
     (apply f args)))
 
 (defn reboot-droplet
