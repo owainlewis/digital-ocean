@@ -86,7 +86,9 @@
     (assert
       (every? true? (map f (into [] keys))))))
 
-(defn pluralize [n s]
+(defn pluralize
+  "Helper function for pluralizing a string"
+  [n s]
   (if (= 1 n) s (str s "s")))
 
 (defmacro when-params

@@ -18,8 +18,7 @@
      :image_id
      :region_id"
   [client-id api-key droplet-params]
-  (when (map? droplet-params)
-    (core/enforce-params droplet-params :name :size_id :image_id :region_id)
+  (core/when-params droplet-params [:name :size_id :image_id :region_id]
     (core/request "droplets/new" client-id api-key
       droplet-params)))
 

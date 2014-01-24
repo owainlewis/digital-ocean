@@ -13,6 +13,10 @@
   (core/url-with-params "droplets" "A" "B" {"C" "D"})
     => "https://api.digitalocean.com/droplets?client_id=A&api_key=B&C=D")
 
+(facts "about pluralization"
+  (core/pluralize 1 "droplet") => "droplet"
+  (core/pluralize 2 "droplet") => "droplets")
+
 (facts "about requests with incorrect credentials"
   (core/request "droplets" "FOO" "BAR") =>
     {:error_message "Access Denied", :message "Access Denied", :status "ERROR"})
