@@ -86,6 +86,12 @@
     (assert
       (every? true? (map f (into [] keys))))))
 
+(defn simple-id-action
+  "A helper function for id based urls i.e /droplets/:droplet_id/reboot"
+  [target target-id action]
+    (let [endpoint (format "%s/%s/%s" target target-id action)]
+      (partial request endpoint)))
+
 (defn pluralize
   "Helper function for pluralizing a string"
   [n s]
