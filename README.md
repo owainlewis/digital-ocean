@@ -44,10 +44,14 @@ Get a single droplet
 (droplet client-id api-key)
 ```
 
-Create a new droplet
+Boot up a new droplet
 
 ```clojure
-(new-droplet client-id api-key {:name ""})
+(new-droplet client-id api-key
+  {:name "Demo"
+   :size_id "66"
+   :image_id "473123"
+   :region_id "1"}))
 ```
 
 ## Regions

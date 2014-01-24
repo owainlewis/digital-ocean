@@ -10,6 +10,7 @@
     (core/get-for "droplets" client-id api-key)))
 
 (defn droplets-with-status
+  "Finds all droplets matching a given status"
   ([client-id api-key status]
     (filter (fn [droplet]
               (= (:status droplet)
@@ -37,6 +38,13 @@
   (core/when-params droplet-params [:name :size_id :image_id :region_id]
     (core/request "droplets/new" client-id api-key
       droplet-params)))
+
+(comment
+  (new-droplet client-id api-key
+    {:name "Demo"
+     :size_id "66"
+     :image_id "473123"
+     :region_id "1"}))
 
 ;; GET /droplets/[droplet_id]
 
@@ -124,19 +132,32 @@
 ;; GET /droplets/[droplet_id]/restore
 
 (defn restore-droplet
-  [client-id api-key droplet-id])
+  "This method allows you to restore a droplet with a previous image or snapshot.
+   This will be a mirror copy of the image or snapshot to your droplet.
+   Be sure you have backed up any necessary information prior to restore"
+  [client-id api-key droplet-id image_id]
+  (core/request
+    (format "droplets/%/restore" droplet-id)
+      client-id api-key {:image_id image_id}))
 
 ;; GET /droplets/[droplet_id]/rebuild
 
 (defn rebuild-droplet
-  [client-id api-key droplet-id])
+  "This method allows you to reinstall a droplet with a default image. This is useful if you
+   want to start again but retain the same IP address for your droplet"
+  [client-id api-key droplet-id image_id]
+  (core/request
+    (format "droplets/%/rebuild" droplet-id)
+      client-id api-key {:image_id image_id}))
 
 ;; GET /droplets/[droplet_id]/rename
 
 (defn rename-droplet
-  [client-id api-key droplet-id])
+  [client-id api-key droplet-id name]
+  (core/request
+    (format "droplets/%/rename" droplet-id)
+      client-id api-key {:name name}))
 
 ;; GET /droplets/[droplet_id]/destroy
 
-(defn destroy-droplet
-  [client-id api-key droplet-id])
+(def destroy-droplet (droplet-id-action "destroy"))

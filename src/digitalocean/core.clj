@@ -6,6 +6,16 @@
 
 (defonce digital-ocean "https://api.digitalocean.com")
 
+(def ^:dynamic auth-client nil)
+(def ^:dynamic auth-key nil)
+
+(defmacro with-auth
+  "DSL helper for easy authentication"
+  [client k & body]
+  `(binding [auth-client ~client
+             auth-key ~k]
+     (do ~@body)))
+
 (defn env
   "Fetch an env var"
   [k] (System/getenv k))
@@ -118,171 +128,3 @@
                       (pluralize (count missing-params#) "param")
                         missing-params#)]
            (throw (Exception. msg#))))))
-
-;; Droplets
-;; ****************************************
-
-(defn droplets
-  "Returns all droplets"
-  ([client-id api-key]
-    (get-for "droplets" client-id api-key))
-  ([creds]
-    (apply droplets (vals creds))))
-
-(defn droplets-with-status
-  ([client-id api-key status]
-    (filter (fn [droplet]
-              (= (:status droplet)
-                 (if (keyword status)
-                   (name status)
-                     status)))
-      (droplets client-id api-key)))
-  ([creds status]
-    (let [[k t] ((juxt :client :key) creds)]
-      (droplets-with-status k t status))))
-
-(defn droplet
-  "Get a single droplet"
-  ([client-id api-key id]
-  (->>> (request (str "droplets/" id) client-id api-key)
-        :droplet))
-  ([creds id]
-    (apply droplet
-      (conj (into [] (vals creds)) id))))
-
-(defn lookup-droplet-ip
-  ([client-id api-key droplet-id]
-  (->> (droplet client-id api-key droplet-id)
-       :ip_address)))
-
-(defn droplet-by-name
-  "Case sensitive name lookup"
-  ([client-id api-key droplet-name]
-    (let [droplets (droplets client-id api-key)]
-      (reduce
-        (fn [acc droplet]
-          (if (= (:name droplet) droplet-name)
-            (conj acc droplet)
-              acc)) [] droplets)))
-    ([creds droplet-name]
-      (let [[k t] ((juxt :client :key) creds)]
-        (droplet-by-name k t droplet-name))))
-
-(defn new-droplet
-  "Create a new Digital Ocean droplet. Droplets params is a simple map
-   Required params
-     :name
-     :size_id
-     :image_id
-     :region_id"
-  [client-id api-key droplet-params]
-  (when (map? droplet-params)
-    (enforce-params droplet-params :name :size_id :image_id :region_id)
-    (request "droplets/new" client-id api-key
-      droplet-params)))
-
-(defn new-small-instance-test [client-id api-key]
-    (new-droplet client-id api-key
-      {:name "Demo"
-       :size_id "66"
-       :image_id "1989574"
-       :region_id "1"}))
-
-(defn droplet-url
-  "Utility function to reduce duplication"
-  [id action]
-  (apply format "droplets/%s/%s" [id action]))
-
-(defn generic-droplet-action [action args]
-  (let [f (fn ([client-id api-key droplet-id]
-                (let [url (droplet-url droplet-id action)]
-                  (request url client-id api-key)))
-              ([creds droplet-id]
-                (let [[k t] ((juxt :client :key) creds)]
-                  (request (droplet-url droplet-id action) k t))))]
-    (apply f args)))
-
-(defn reboot-droplet
-  ([client-id api-key droplet-id]
-    (request (droplet-url droplet-id "reboot")
-      client-id  api-key))
-  ([creds droplet-id]
-    (let [[k t] ((juxt :client :key) creds)]
-      (reboot-droplet k t droplet-id))))
-
-(defn shutdown-droplet
-  [& args]
-  "Power off a Digital Ocean droplet"
-  (generic-droplet-action "shutdown" (into [] args)))
-
-(defn power-off-droplet
-  "Power off a Digital Ocean droplet"
-  [& args] (generic-droplet-action "power_off" (into [] args)))
-
-(defn power-on-droplet
-  "Power off a Digital Ocean droplet"
-  [& args] (generic-droplet-action "power_on" (into [] args)))
-
-;; Regions
-;; ****************************************
-
-(defn regions
-  "Fetch all Digital Ocean regions"
-  ([client-id api-key]
-  (->>>
-    (request "regions" client-id api-key)
-    :regions))
-  ([creds] (apply regions (vals creds))))
-
-(defn region-ids
-  "Returns all Digital Ocean region ids"
-  ([client-id api-key]
-    (regions client-id api-key))
-  ([creds]
-    (apply region-ids (vals creds))))
-
-;; Images
-;; ****************************************
-
-(defn images
-  "List all Digital Ocean images"
-  ([client-id api-key]
-    (get-for "images" client-id api-key))
-  ([creds]
-    (apply images (vals creds))))
-
-(defn boot-server-from-existing-image [image-id]
-  )
-
-;; SSH Keys
-;; ****************************************
-
-(defn ssh-keys
-  "Fetch all SSH keys for your account"
-  ([client-id api-key]
-    (get-for "ssh_keys" client-id api-key))
-  ([creds]
-    (apply ssh-keys (vals creds))))
-
-;; Sizes
-;; ****************************************
-
-(defn sizes
-  "Return all instance sizes"
-  ([client-id api-key]
-    (get-for "sizes" client-id api-key))
-  ([creds]
-    (apply sizes (vals creds))))
-
-;; Domains
-;; ****************************************
-
-(defn domains
-  "Return all domains for your digital ocean account"
-  ([client-id api-key]
-    (get-for "domains" client-id api-key))
-  ([creds]
-    (apply domains (vals creds))))
-
-;; Events
-;; ****************************************
