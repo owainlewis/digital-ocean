@@ -9,6 +9,18 @@
   ([client-id api-key]
     (core/get-for "droplets" client-id api-key)))
 
+(defn droplets-with-status
+  ([client-id api-key status]
+    (filter (fn [droplet]
+              (= (:status droplet)
+                 (if (keyword status)
+                   (name status)
+                     status)))
+      (droplets client-id api-key)))
+  ([creds status]
+    (let [[k t] ((juxt :client :key) creds)]
+      (droplets-with-status k t status))))
+
 ;; GET /droplets/new
 
 (defn new-droplet
@@ -34,6 +46,16 @@
     (let [response (core/request (str "droplets/" droplet-id) client-id api-key)]
       (->> response :droplet))))
 
+(defn droplet-by-name
+  "Case sensitive exact match name lookup"
+  ([client-id api-key droplet-name]
+    (let [droplets (droplets client-id api-key)]
+      (first
+        (for [d droplets :when (= (:name d) droplet-name)] d))))
+    ([creds droplet-name]
+      (let [[k t] ((juxt :client :key) creds)]
+        (droplet-by-name k t droplet-name))))
+
 (defn droplet-id-action
   "Abstraction for the shape of these repetitive functions"
   ([action]
@@ -50,19 +72,29 @@
 
 ;; GET /droplets/[droplet_id]/power_cycle
 
-(def reboot-droplet (droplet-id-action "power_cycle"))
+(def power-cycle-droplet
+  "This method allows you to power cycle a droplet.
+   This will turn off the droplet and then turn it back on"
+  (droplet-id-action "power_cycle"))
 
 ;; GET /droplets/[droplet_id]/shutdown
 
-(def shutdown-droplet (droplet-id-action "shutdown"))
+(def shutdown-droplet
+  "This method allows you to shutdown a running droplet. The droplet will remain in your account"
+  (droplet-id-action "shutdown"))
 
 ;; GET /droplets/[droplet_id]/power_off
 
-(def power-off-droplet (droplet-id-action "power_off"))
+(def power-off-droplet
+  "This method allows you to poweroff a running droplet.
+   The droplet will remain in your account"
+  (droplet-id-action "power_off"))
 
 ;; GET /droplets/[droplet_id]/power_on
 
-(def power-on-droplet (droplet-id-action "power_on"))
+(def power-on-droplet
+  "This method allows you to poweron a powered off droplet"
+  (droplet-id-action "power_on"))
 
 ;; GET /droplets/[droplet_id]/password_reset
 
@@ -83,8 +115,7 @@
 (defn snapshot-droplet
   "droplet_id Required, Numeric, this is the id of your droplet that you want to snapshot
    name Optional, String, this is the name of the new snapshot you want to create.
-   If not set, the snapshot name will default to date/time
-  "
+   If not set, the snapshot name will default to date/time"
   ([client-id api-key droplet-id name]
     (core/request
       (format "droplets/%/snapshot" droplet-id)
