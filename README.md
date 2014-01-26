@@ -4,6 +4,10 @@ Clojure interface for Digital Ocean
 
 ## Usage
 
+```
+[digitalocean "0.1.0"]
+```
+
 ### Authentication
 
 All methods require a client-id and api-key that can be found in your Digital Ocean Account under the API tab.
