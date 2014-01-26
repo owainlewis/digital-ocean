@@ -1,1 +1,2 @@
-(ns digitalocean.domains)
+(ns digitalocean.domains
+  (require [digitalocean.core :as core]))

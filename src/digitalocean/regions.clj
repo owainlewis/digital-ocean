@@ -1,10 +1,11 @@
-(ns digitalocean.regions)
+(ns digitalocean.regions
+  (require [digitalocean.core :as core]))
 
 (defn regions
   "Fetch all Digital Ocean regions"
   ([client-id api-key]
-  (->>>
-    (request "regions" client-id api-key)
+  (core/->>>
+    (core/request "regions" client-id api-key)
     :regions))
   ([creds] (apply regions (vals creds))))
 

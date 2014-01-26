@@ -1,11 +1,12 @@
-(ns digitalocean.ssh)
+(ns digitalocean.ssh
+  (require [digitalocean.core :as core]))
 
 ;; GET /ssh_keys
 
 (defn ssh-keys
   "Fetch all SSH keys for your account"
   ([client-id api-key]
-    (get-for "ssh_keys" client-id api-key))
+    (core/get-for "ssh_keys" client-id api-key))
   ([creds]
     (apply ssh-keys (vals creds))))
 
