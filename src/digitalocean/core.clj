@@ -2,7 +2,8 @@
   ^{:doc "A Clojure wrapper for the Digital Ocean API"
     :author "Owain Lewis"}
   (:require [cheshire.core :as json]
-            [org.httpkit.client :as http]))
+	    [schema.core :as scm]
+	    [org.httpkit.client :as http]))
 
 (defonce digital-ocean "https://api.digitalocean.com")
 
@@ -13,12 +14,14 @@
   "DSL helper for easy authentication"
   [client k & body]
   `(binding [auth-client ~client
-             auth-key ~k]
+	     auth-key ~k]
      (do ~@body)))
 
 (defn env
   "Fetch an env var"
   [k] (System/getenv k))
+
+(def CredsType (scm/enum :client :key))
 
 (defn make-creds
   "Utility function for building a credentials map"
@@ -43,10 +46,10 @@
   "Build query params"
   [client-id api-key & params]
   (let [base-params  (format "?client_id=%s&api_key=%s" client-id api-key)
-        extra-params (apply str
-                       (for [[k v] (url-encode-params (into {} params))]
-                         (str "&" (if (keyword? k)
-                                    (name k) k) "=" v)))]
+	extra-params (apply str
+		       (for [[k v] (url-encode-params (into {} params))]
+			 (str "&" (if (keyword? k)
+				    (name k) k) "=" v)))]
     (if (clojure.string/blank? extra-params)
       base-params
       (format "%s%s" base-params extra-params))))
@@ -54,7 +57,7 @@
 (defn url-with-params
   [endpoint client-id api-key & params]
   (let [query-params (make-query-params client-id api-key (into {} params))
-        url (format "%s/%s%s" digital-ocean endpoint query-params)]
+	url (format "%s/%s%s" digital-ocean endpoint query-params)]
     url))
 
 ;; HTTP request
@@ -65,7 +68,7 @@
    for this particular API"
   [endpoint client-id api-key & params]
   (let [url (url-with-params endpoint client-id api-key (into {} params))
-        {:keys [status headers body error] :as resp} @(http/get url)]
+	{:keys [status headers body error] :as resp} @(http/get url)]
     (if error
       {:error error}
       (json/parse-string body true))))
@@ -86,7 +89,7 @@
   ([resource client-id api-key]
   (let [k (keyword resource)]
     (->>> (request resource client-id api-key)
-          k))))
+	  k))))
 
 (defn enforce-params
   "Helper which throws assertion error if required params are
@@ -114,17 +117,17 @@
   [subject-map keys & body]
   `(let [f# (partial contains? ~subject-map)]
      (if (every? true?
-           (map f# ~keys))
+	   (map f# ~keys))
        (do ~@body)
-         (let [missing-params#
-                (into []
-                  (clojure.set/difference
-                    (set ~keys)
-                    (set (keys ~subject-map))))
-               key-list# (apply str
-                           (map name
-                             (interpose " " ~keys)))
-               msg# (format "Missing required %s %s"
-                      (pluralize (count missing-params#) "param")
-                        missing-params#)]
-           (throw (Exception. msg#))))))
+	 (let [missing-params#
+		(into []
+		  (clojure.set/difference
+		    (set ~keys)
+		    (set (keys ~subject-map))))
+	       key-list# (apply str
+			   (map name
+			     (interpose " " ~keys)))
+	       msg# (format "Missing required %s %s"
+		      (pluralize (count missing-params#) "param")
+			missing-params#)]
+	   (throw (Exception. msg#))))))
