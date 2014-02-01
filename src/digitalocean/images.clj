@@ -31,8 +31,6 @@
   (let [response (core/request (str "images/" image-id) client-id api-key)]
     (->> response :image)))
 
-(def destroy-droplet (image-id-action "destroy"))
-
 ;; GET /images/[image_id]/destroy
 
 (def destroy-droplet (image-id-action "destroy"))
