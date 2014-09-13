@@ -33,6 +33,6 @@
 
 ;; GET /images/[image_id]/destroy
 
-(def destroy-droplet (image-id-action "destroy"))
+(def destroy-image (image-id-action "destroy"))
 
 ;; GET /images/[image_id]/transfer
