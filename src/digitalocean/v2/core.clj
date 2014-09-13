@@ -53,7 +53,10 @@
      https://api.digitalocean.com/v2/domains/1/2/3
   "
   [resource & parts]
-  (let [nested-url-parts (apply str (interpose "/" (map normalize-url (into [] parts))))
+  (let [nested-url-parts 
+         (apply str 
+           (interpose "/" 
+             (map normalize-url (into [] parts))))
         qualified-resource (name resource)]
     (str endpoint qualified-resource "/" nested-url-parts)))
 
@@ -68,7 +71,7 @@
   (let [request-builder (fn [token url-identifiers & params]
                           (let [resource-endpoint
                             (-> (partial resource-url (name resource))
-                              (apply url-identifiers))]
+                                (apply url-identifiers))]
     (run-request method 
                  resource-endpoint 
                  token 
