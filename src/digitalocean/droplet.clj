@@ -49,7 +49,7 @@
 ;; GET /droplets/[droplet_id]
 
 (defn droplet
-  "This method returns full information for a specific droplet ID that is passed in the URL." ()
+  "This method returns full information for a specific droplet ID that is passed in the URL."
   ([client-id api-key droplet-id]
     (let [response (core/request (str "droplets/" droplet-id) client-id api-key)]
       (->> response :droplet))))
