@@ -49,6 +49,9 @@
 ;; Generics
 
 (defn generic
+  "The function does the bulk of the work in abstracting away repetitive
+   REST like requests.
+   i.e (generic :get :domains) => (fn [token] ;; domain fetching logic)"
   [method resource]
   (let [f (fn [token url-identifiers & params]
             (let [resource-endpoint
@@ -63,35 +66,63 @@
 
 ;; Domains
 
-(def domains (generic :get :domains))
-(def get-domain  domains)
+(def domains
+  "Fetch all domains"
+  (generic :get :domains))
+
+(def get-domain
+  "Get a single domain by name"
+  domains)
 
 ;; Records
 
-(defn records [token domain]
-  (run-request :get (resource-url (str "domains/" domain "/records")) token))
+(defn records
+  "Return all records for a domain"
+  [token domain]
+  (run-request :get
+    (resource-url (str "domains/" domain "/records"))
+      token))
 
 ;; Droplets
 
-(def droplets (generic :get :droplets))
-(def get-droplet droplets)
-(def create-droplet (generic :post :droplets))
+(def droplets
+  "Get all droplets"
+  (generic :get :droplets))
+
+(def get-droplet
+  "Get a single droplet by ID"
+  droplets)
+
+(def create-droplet
+  "Create a new droplet"
+  (generic :post :droplets))
 
 ;; Images
 
-(def images (generic :get :images))
+(def images "Return all images"
+  (generic :get :images))
+
 (def get-image images)
 
 ;; Keys
 
-(def keys (generic :get "account/keys"))
+(def keys "Get all account SSH keys"
+  (generic :get "account/keys"))
+
 (def get-key keys)
-(def create-key (generic :post "account/keys"))
+
+(def create-key
+  "Create a new SSH key"
+  (generic :post "account/keys"))
 
 ;; Regions
 
-(def regions (generic :get :regions))
+(def regions
+  "Returns all Digital Ocean regions"
+  (generic :get :regions))
 
 ;; Sizes
 
-(def sizes (generic :get :sizes))
+(def sizes
+  "Returns droplet sizes for Digital Ocean images"
+  (generic :get :sizes))
