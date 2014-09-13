@@ -2,61 +2,56 @@
 
 Clojure interface for Digital Ocean
 
-## NOTE
+## V1
 
-The Digital Ocean API will soon be moving to a V2 (in progress). The code here currently referes to the V1 API
+See V1.md for information about the old V1 API
 
-## Usage
-
-```
-[digitalocean "0.1.0"]
-```
+## V2
 
 ### Authentication
 
-All methods require a client-id and api-key that can be found in your Digital Ocean Account under the API tab.
+You can pass in an authentication token directly to every function. This can be found in your digital ocean account.
+
+### Getting started
 
 ```clojure
-(ns myns
-  (:require [digital-ocean.droplet :refer :all]))
-(def client-id "YOUR_CLIENT_ID")
-(def api-key "YOUR_KEY")
-
-(droplets client-id api-key)
+(ns myproject
+  (:require [digitalocean.v2.core :as do]))
 ```
 
-## Droplets
+### Droplets
 
-All droplets for your account
+Get all droplets
 
 ```clojure
-(droplets client-id api-key)
-
+(do/droplets "AUTH_TOKEN")
 ```
 
-Get a single droplet
+Get a droplet by ID
 
 ```clojure
-(droplet client-id api-key)
+(do/droplet "AUTH_TOKEN" 123)
 ```
 
 Boot up a new droplet
 
-```clojure
-(new-droplet client-id api-key
-  {:name "Demo"
-   :size_id "66"
-   :image_id "473123"
-   :region_id "1"}))
-```
-
-## Regions
-
-Return all regions
+Note that certain fields are required. See the Digital Ocean API V2 docs for all params
 
 ```clojure
-(regions client-id api-key)
+(do/droplet-create "AUTH_TOKEN"
+  {:name "my droplet"
+   :region "nyc1"
+   :size "512mb"
+   :image "123"
+  })
 ```
+
+### Domains
+
+```clojure
+(do/domains "AUTH_TOKEN")
+```
+
 
 ## License
 
