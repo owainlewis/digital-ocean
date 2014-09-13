@@ -42,7 +42,7 @@ Get a droplet by ID
 (do/get-droplet token 123)
 ```
 
-Boot up a new droplet
+Boot up a new droplet. All droplets require an image id to boot from.
 
 Note that certain fields are required. See the Digital Ocean API V2 docs for all params
 
@@ -63,19 +63,57 @@ Get all
 (do/domains token)
 ```
 
-Get one
+Get one domain by name
 
 ```clojure
 (do/get-domain token "fshionable.com")
 ```
 
+### Domain records
+
+Get records for a domain
+
+```clojure
+(do/records token "fshionable.com")
+```
+
 ## Images
+
+Get all images
+
+```clojure
+(do/images token)
+```
 
 ### Keys
 
+```clojure
+
+;; Get all keys
+(do/keys token)
+
+;; Create a new one
+(do/create-key token nil {
+  :name "Blah"
+  :public_key "Blah"})
+
+```
+
 ### Regions
 
+Get all regions
+
+```clojure
+(do/regions token)
+```
+
 ### Sizes
+
+Get all sizes
+
+```clojure
+(do/sizes token)
+```
 
 ## License
 
