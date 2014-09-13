@@ -69,9 +69,10 @@
   [endpoint client-id api-key & params]
   (let [url (url-with-params endpoint client-id api-key (into {} params))
 	{:keys [status headers body error] :as resp} @(http/get url)]
-    (if error
-      {:error error}
-      (json/parse-string body true))))
+    (cond
+      (not (nil?  error)) {:error error}
+      (= status 401) {:error "Access denied"}
+      :else (json/parse-string body true))))
 
 ;; **************************************************************
 
