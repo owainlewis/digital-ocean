@@ -47,6 +47,7 @@
     (str endpoint qualified-resource "/" nested-url-parts)))
 
 ;; Generics
+;; **************************************************************
 
 (defn generic
   "The function does the bulk of the work in abstracting away repetitive
@@ -65,6 +66,7 @@
       (f token [resource-identifier] (into {} params))))))
 
 ;; Domains
+;; **************************************************************
 
 (def domains
   "Fetch all domains"
@@ -75,6 +77,7 @@
   domains)
 
 ;; Records
+;; **************************************************************
 
 (defn records
   "Return all records for a domain"
@@ -84,6 +87,7 @@
       token))
 
 ;; Droplets
+;; **************************************************************
 
 (def droplets
   "Get all droplets"
@@ -98,6 +102,7 @@
   (generic :post :droplets))
 
 ;; Images
+;; **************************************************************
 
 (def images "Return all images"
   (generic :get :images))
@@ -105,6 +110,7 @@
 (def get-image images)
 
 ;; Keys
+;; **************************************************************
 
 (def keys "Get all account SSH keys"
   (generic :get "account/keys"))
@@ -116,12 +122,14 @@
   (generic :post "account/keys"))
 
 ;; Regions
+;; **************************************************************
 
 (def regions
   "Returns all Digital Ocean regions"
   (generic :get :regions))
 
 ;; Sizes
+;; **************************************************************
 
 (def sizes
   "Returns droplet sizes for Digital Ocean images"
