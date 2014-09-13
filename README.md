@@ -2,13 +2,13 @@
 
 Clojure interface for Digital Ocean
 
+```
+[digitalocean "1.0"]
+```
+
 ## V1
 
 V1 API will be depricated soon. See V1.md for information about the old V1 API.
-
-I recommend using the V2 API going forward.
-
-I've tried to map this API to be as RESTful and simple as possible
 
 ## V2
 
