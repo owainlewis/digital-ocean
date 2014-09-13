@@ -18,13 +18,16 @@
   "Utility method for making HTTP requests
    to the Digital Ocean API"
   [method url token & params]
-  (let [{:keys [status headers body error] :as resp}
+  (let [all-params (into {} params)
+        {:keys [status headers body error] :as resp}
           @(http/request
             {:method method
              :url url
+             :form-params all-params
              :headers {"Authorization" (str "Bearer " token)}})]
-  (when (nil? error)
-    (json/parse-string body true))))
+  (if (nil? error)
+    (json/parse-string body true)
+    {:error error})))
 
 (defn resource-url
   "Helper function that builds url endpoints
@@ -60,3 +63,9 @@
      {:droplet {:status \"active\", :vcpus 1, :name \"coreos\", :locked false}}..."
   [token droplet-id]
   (run-request :get (resource-url :droplets droplet-id) token))
+
+(defn droplet-create
+  "Create a new droplet
+   Required params are :name :region :size :image"
+  [token params]
+  (run-request :post (resource-url :droplets) token params))
