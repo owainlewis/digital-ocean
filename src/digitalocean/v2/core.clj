@@ -66,10 +66,13 @@
    i.e (generic :get :domains) => (fn [token] ;; domain fetching logic)"
   [method resource]
   (let [request-builder (fn [token url-identifiers & params]
-            (let [resource-endpoint
-                    (-> (partial resource-url (name resource))
-                        (apply url-identifiers))]
-              (run-request method resource-endpoint token (into {} params))))]
+                          (let [resource-endpoint
+                            (-> (partial resource-url (name resource))
+                              (apply url-identifiers))]
+    (run-request method 
+                 resource-endpoint 
+                 token 
+                 (into {} params))))]
   (fn
     ([token]
       (request-builder token [] {}))
