@@ -15,6 +15,8 @@
     (with-open [rdr (io/reader path)]
       (first (take 1 (line-seq rdr))))))
 
+;; **************************************************************
+
 (defn run-request
   "Utility method for making HTTP requests
    to the Digital Ocean API"
