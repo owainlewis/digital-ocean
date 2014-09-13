@@ -1,4 +1,4 @@
-(ns digitalocean.images
+(ns digitalocean.v1.images
   (require [digitalocean.core :as core]))
 
 ;; GET /images

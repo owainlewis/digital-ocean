@@ -1,4 +1,4 @@
-(ns digitalocean.droplet
+(ns digitalocean.v1.droplet
   (require [digitalocean.core :as core]))
 
 ;; GET /droplets

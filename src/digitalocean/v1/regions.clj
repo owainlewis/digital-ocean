@@ -1,4 +1,4 @@
-(ns digitalocean.regions
+(ns digitalocean.v1.regions
   (require [digitalocean.core :as core]))
 
 (defn regions

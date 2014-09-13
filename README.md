@@ -2,6 +2,10 @@
 
 Clojure interface for Digital Ocean
 
+## NOTE
+
+The Digital Ocean API will soon be moving to a V2 (in progress). The code here currently referes to the V1 API
+
 ## Usage
 
 ```

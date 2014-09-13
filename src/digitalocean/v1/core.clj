@@ -1,4 +1,4 @@
-(ns digitalocean.core
+(ns digitalocean.v1.core
   ^{:doc "A Clojure wrapper for the Digital Ocean API"
     :author "Owain Lewis"}
   (:require [cheshire.core :as json]

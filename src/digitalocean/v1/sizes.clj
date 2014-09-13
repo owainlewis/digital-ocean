@@ -1,4 +1,4 @@
-(ns digitalocean.sizes
+(ns digitalocean.v1.sizes
   (require [digitalocean.core :as core]))
 
 (defn sizes

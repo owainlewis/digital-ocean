@@ -1,4 +1,4 @@
-(ns digitalocean.ssh
+(ns digitalocean.v1.ssh
   (require [digitalocean.core :as core]))
 
 ;; GET /ssh_keys

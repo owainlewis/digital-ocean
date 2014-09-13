@@ -1,4 +1,4 @@
-(ns digitalocean.domains
+(ns digitalocean.v1.domains
   (require [digitalocean.core :as core]))
 
 ;; GET /domains

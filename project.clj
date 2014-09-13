@@ -8,4 +8,4 @@
 		 [cheshire "5.3.1"]
 		 [prismatic/schema "0.2.0"]
 		 [midje "1.6.0"]
-		 [http-kit "2.1.16"]])
+		 [http-kit "2.1.18"]])
