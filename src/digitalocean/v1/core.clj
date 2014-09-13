@@ -72,7 +72,6 @@
     (if error
       {:error error}
       (json/parse-string body true))))
-
 ;; **************************************************************
 
 (defmacro ->>>
@@ -87,9 +86,11 @@
 (defn get-for
   "Helper function/abstraction to reduce duplication"
   ([resource client-id api-key]
-  (let [k (keyword resource)]
-    (->>> (request resource client-id api-key)
-	  k))))
+  (let [k (keyword resource)
+        resp (request resource client-id api-key)]
+    (if (= (:status resp) "ERROR")
+     resp
+    (->>> resp k)))))
 
 (defn enforce-params
   "Helper which throws assertion error if required params are
