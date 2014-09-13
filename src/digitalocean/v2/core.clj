@@ -56,16 +56,16 @@
    REST like requests.
    i.e (generic :get :domains) => (fn [token] ;; domain fetching logic)"
   [method resource]
-  (let [f (fn [token url-identifiers & params]
+  (let [request-builder (fn [token url-identifiers & params]
             (let [resource-endpoint
                     (-> (partial resource-url (name resource))
                         (apply url-identifiers))]
               (run-request method resource-endpoint token (into {} params))))]
   (fn
     ([token]
-      (f token [] {}))
+      (request-builder token [] {}))
     ([token resource-identifier & params]
-      (f token [resource-identifier] (into {} params))))))
+      (request-builder token [resource-identifier] (into {} params))))))
 
 ;; Domains
 ;; **************************************************************
