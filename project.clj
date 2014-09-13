@@ -1,4 +1,4 @@
-(defproject digitalocean "1.0"
+(defproject digitalocean "1.1"
   :description "Clojure Digital Ocean Client"
   :url "http://owainlewis.com"
   :license {:name "Eclipse Public License"

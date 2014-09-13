@@ -1,17 +1,18 @@
 (ns digitalocean.v2.core
   (:import [java.net URLEncoder])
+  (:refer-clojure :exclude [keys])
   (:require [cheshire.core :as json]
 	    [schema.core :as scm]
             [clojure.java.io :as io]
 	    [org.httpkit.client :as http]))
-	  
-;; _____ _____ _____ _____ _______       _         ____   _____ ______          _   _ 
+
+;; _____ _____ _____ _____ _______       _         ____   _____ ______          _   _
 ;; |  __ \_   _/ ____|_   _|__   __|/\   | |       / __ \ / ____|  ____|   /\   | \ | |
 ;; | |  | || || |  __  | |    | |  /  \  | |      | |  | | |    | |__     /  \  |  \| |
 ;; | |  | || || | |_ | | |    | | / /\ \ | |      | |  | | |    |  __|   / /\ \ | . ` |
 ;; | |__| || || |__| |_| |_   | |/ ____ \| |____  | |__| | |____| |____ / ____ \| |\  |
 ;; |_____/_____\_____|_____|  |_/_/    \_\______|  \____/ \_____|______/_/    \_\_| \_|
-                                                                                    
+
 
 (def endpoint "https://api.digitalocean.com/v2/")
 
@@ -52,7 +53,7 @@
      https://api.digitalocean.com/v2/domains/1/2/3
   "
   [resource & parts]
-  (let [nested-url-parts (apply str (map normalize-url (interpose "/" (into [] parts))))
+  (let [nested-url-parts (apply str (interpose "/" (map normalize-url (into [] parts))))
         qualified-resource (name resource)]
     (str endpoint qualified-resource "/" nested-url-parts)))
 

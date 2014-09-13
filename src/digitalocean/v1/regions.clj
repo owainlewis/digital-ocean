@@ -1,5 +1,5 @@
 (ns digitalocean.v1.regions
-  (require [digitalocean.core :as core]))
+  (require [digitalocean.v1.core :as core]))
 
 (defn regions
   "Fetch all Digital Ocean regions"
