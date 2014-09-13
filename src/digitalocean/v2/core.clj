@@ -39,33 +39,54 @@
         qualified-resource (name resource)]
     (str endpoint qualified-resource "/" nested-url-parts)))
 
+;; Generics
+
+(defn generic
+  [method resource]
+  (let [f (fn [token url-identifiers & params]
+            (let [resource-endpoint
+                    (apply (partial resource-url
+                      (name resource)) url-identifiers)]
+              (run-request method resource-endpoint token (into {} params))))]
+  (fn
+    ([token]
+      (f token [] {}))
+    ([token resource-identifier & params]
+      (f token [resource-identifier] (into {} params))))))
+
+
 ;; Domains
 
-(defn domains
-  "Returns all domains for a digital ocean account"
-  [token]
-  (run-request :get (resource-url :domains) token))
+(def domains (generic :get :domains))
 
-(defn domain
-  "Return a single domain by name i.e (domain token \"mysite.com\")"
-  [token name]
-  (run-request :get (resource-url :domains name) token))
+(def get-domain  domains)
 
 ;; Droplets
 
-(defn droplets
-  [token]
-  (run-request :get (resource-url :droplets) token))
+(def droplets (generic :get :droplets))
 
-(defn droplet
-  "Find a droplet by id i.e
-   (droplet token 2605916) =>
-     {:droplet {:status \"active\", :vcpus 1, :name \"coreos\", :locked false}}..."
-  [token droplet-id]
-  (run-request :get (resource-url :droplets droplet-id) token))
+(def get-droplet droplets)
 
-(defn droplet-create
-  "Create a new droplet
-   Required params are :name :region :size :image"
-  [token params]
-  (run-request :post (resource-url :droplets) token params))
+(def create-droplet (generic :post :droplets))
+
+;; Images
+
+(def images (generic :get :images))
+
+(def get-image images)
+
+;; Keys
+
+(def keys (generic :get :keys))
+
+(def get-key keys)
+
+;; Regions
+
+(def regions (generic :get :regions))
+
+(def get-region regions)
+
+;; Sizes
+
+(def sizes (generic :get :sizes))
