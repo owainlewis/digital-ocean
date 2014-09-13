@@ -126,7 +126,7 @@
    If not set, the snapshot name will default to date/time"
   ([client-id api-key droplet-id name]
     (core/request
-      (format "droplets/%/snapshot" droplet-id)
+      (format "droplets/%s/snapshot" droplet-id)
         client-id api-key {:name name})))
 
 ;; GET /droplets/[droplet_id]/restore
