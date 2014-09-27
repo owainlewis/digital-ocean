@@ -31,12 +31,17 @@
    to the Digital Ocean API"
   [method url token & params]
   (let [all-params (into {} params)
+        headers {"Content-Type" "application/json"
+                 "Authorization" (str "Bearer " token)}
+        mergeable (if (empty? all-params)
+                    (hash-map)
+                    {:body (json/encode all-params)})
         {:keys [status headers body error] :as resp}
           @(http/request
-            {:method method
-             :url url
-             :form-params all-params
-             :headers {"Authorization" (str "Bearer " token)}})]
+            (merge
+              {:method method
+               :url url
+               :headers headers} mergeable))]
   (if (nil? error)
     (json/parse-string body true)
     {:error error})))
@@ -129,10 +134,10 @@
 ;; Keys
 ;; **************************************************************
 
-(def keys "Get all account SSH keys"
+(def ssh-keys "Get all account SSH keys"
   (generic :get "account/keys"))
 
-(def get-key keys)
+(def get-key ssh-keys)
 
 (def create-key
   "Create a new SSH key"
