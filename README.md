@@ -3,7 +3,7 @@
 Clojure interface for Digital Ocean
 
 ```
-[digitalocean "1.1"]
+[digitalocean "1.2"]
 ```
 
 ## V1
