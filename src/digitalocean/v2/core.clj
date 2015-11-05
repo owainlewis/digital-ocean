@@ -123,6 +123,11 @@
   "Create a new droplet"
   (generic :post :droplets))
 
+(def delete-droplet
+  "Delete a droplet by ID
+  (delete-droplet <token> dropletID) => nil (if it has been deleted successfully)"
+  (generic :delete :droplets))
+
 ;; Images
 ;; **************************************************************
 

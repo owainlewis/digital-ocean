@@ -55,6 +55,12 @@ Note that certain fields are required. See the Digital Ocean API V2 docs for all
   })
 ```
 
+Delete a droplet by ID
+
+```clojure
+(do/delete-droplet token 123)
+```
+
 ### Domains
 
 Get all
