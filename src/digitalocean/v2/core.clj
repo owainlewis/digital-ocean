@@ -24,8 +24,6 @@
     (with-open [rdr (io/reader path)]
       (first (take 1 (line-seq rdr))))))
 
-;; **************************************************************
-
 (defn run-request
   "Utility method for making HTTP requests
    to the Digital Ocean API"
@@ -65,9 +63,6 @@
         qualified-resource (name resource)]
     (str endpoint qualified-resource "/" nested-url-parts)))
 
-;; Generics
-;; **************************************************************
-
 (defn generic
   "The function does the bulk of the work in abstracting away repetitive
    REST like requests.
@@ -87,9 +82,6 @@
     ([token resource-identifier & params]
       (request-builder token [resource-identifier] (into {} params))))))
 
-;; Domains
-;; **************************************************************
-
 (def domains
   "Fetch all domains"
   (generic :get :domains))
@@ -98,18 +90,12 @@
   "Get a single domain by name"
   domains)
 
-;; Records
-;; **************************************************************
-
 (defn records
   "Return all records for a domain"
   [token domain]
   (run-request :get
     (resource-url (str "domains/" domain "/records"))
       token))
-
-;; Droplets
-;; **************************************************************
 
 (def droplets
   "Get all droplets"
@@ -128,16 +114,10 @@
   (delete-droplet <token> dropletID) => nil (if it has been deleted successfully)"
   (generic :delete :droplets))
 
-;; Images
-;; **************************************************************
-
 (def images "Return all images"
   (generic :get :images))
 
 (def get-image images)
-
-;; Keys
-;; **************************************************************
 
 (def ssh-keys "Get all account SSH keys"
   (generic :get "account/keys"))
@@ -148,15 +128,9 @@
   "Create a new SSH key"
   (generic :post "account/keys"))
 
-;; Regions
-;; **************************************************************
-
 (def regions
   "Returns all Digital Ocean regions"
   (generic :get :regions))
-
-;; Sizes
-;; **************************************************************
 
 (def sizes
   "Returns droplet sizes for Digital Ocean images"
