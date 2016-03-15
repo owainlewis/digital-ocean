@@ -32,9 +32,6 @@
   { :client (env "DO_CLIENT")
     :key    (env "DO_KEY") })
 
-;; Helper methods
-;; **************************************************************
-
 (defn url-encode-params
   "Utility function for url encoding HTTP form params"
   [params-map]
@@ -60,9 +57,6 @@
 	url (format "%s/%s%s" digital-ocean endpoint query-params)]
     url))
 
-;; HTTP request
-;; **************************************************************
-
 (defn request
   "Make a simple request. We are only dealing with GET requests
    for this particular API"
@@ -72,7 +66,6 @@
     (if error
       {:error error}
       (json/parse-string body true))))
-;; **************************************************************
 
 (defmacro ->>>
   "Safe thread macro
