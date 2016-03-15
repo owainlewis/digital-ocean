@@ -26,5 +26,3 @@
 (facts "about get-for with incorrect credentials"
   (do/get-for "droplets" "FOO" "BAR") =>
    {:error_message "Access Denied", :message "Access Denied", :status "ERROR"})
-
-
