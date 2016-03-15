@@ -6,15 +6,7 @@
             [clojure.java.io :as io]
 	    [org.httpkit.client :as http]))
 
-;; _____ _____ _____ _____ _______       _         ____   _____ ______          _   _
-;; |  __ \_   _/ ____|_   _|__   __|/\   | |       / __ \ / ____|  ____|   /\   | \ | |
-;; | |  | || || |  __  | |    | |  /  \  | |      | |  | | |    | |__     /  \  |  \| |
-;; | |  | || || | |_ | | |    | | / /\ \ | |      | |  | | |    |  __|   / /\ \ | . ` |
-;; | |__| || || |__| |_| |_   | |/ ____ \| |____  | |__| | |____| |____ / ____ \| |\  |
-;; |_____/_____\_____|_____|  |_/_/    \_\______|  \____/ \_____|______/_/    \_\_| \_|
-
-
-(def endpoint "https://api.digitalocean.com/v2/")
+(defonce endpoint "https://api.digitalocean.com/v2/")
 
 (defn load-dev-token
   "Loads temporary token for development
