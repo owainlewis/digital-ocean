@@ -7,15 +7,6 @@
 	    [org.httpkit.client :as http]))
 
 (defonce endpoint "https://api.digitalocean.com/v2/")
-
-(defn load-dev-token
-  "Loads temporary token for development
-   can be removed at some point"
-  []
-  (let [path "/Users/owainlewis/.auth/DIGITALOCEAN.txt"]
-    (with-open [rdr (io/reader path)]
-      (first (take 1 (line-seq rdr))))))
-
 (defn run-request
   "Utility method for making HTTP requests
    to the Digital Ocean API"
