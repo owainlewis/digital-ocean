@@ -6,17 +6,13 @@ Clojure interface for Digital Ocean
 [digitalocean "1.2"]
 ```
 
-## V1
-
-V1 API will be depricated soon. See V1.md for information about the old V1 API.
-
-## V2
+## V2 API
 
 ### Authentication
 
-You can pass in an authentication token directly to every function.
+You can pass in an OAuth token directly to every function.
 
-This can be found in your digital ocean account.
+You can get a token from your Digital Ocean account user settings.
 
 ### Getting started
 
@@ -48,10 +44,11 @@ Note that certain fields are required. See the Digital Ocean API V2 docs for all
 
 ```clojure
 (do/create-droplet token nil
-  {:name "my droplet"
-   :region "nyc1"
-   :size "512mb"
-   :image "123"
+  {:name "ubuntu-s-1vcpu-2gb-lon1-01"
+   :region "lon1"
+   :size "s-1vcpu-2gb"
+   :image "ubuntu-16-04-x64"
+   :tags ["web"]
   })
 ```
 

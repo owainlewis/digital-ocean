@@ -2,11 +2,11 @@
   (:import [java.net URLEncoder])
   (:refer-clojure :exclude [keys])
   (:require [cheshire.core :as json]
-	    [schema.core :as scm]
             [clojure.java.io :as io]
-	    [org.httpkit.client :as http]))
+            [org.httpkit.client :as http]))
 
 (defonce endpoint "https://api.digitalocean.com/v2/")
+
 (defn run-request
   "Utility method for making HTTP requests
    to the Digital Ocean API"
@@ -39,9 +39,9 @@
      https://api.digitalocean.com/v2/domains/1/2/3
   "
   [resource & parts]
-  (let [nested-url-parts 
-         (apply str 
-           (interpose "/" 
+  (let [nested-url-parts
+         (apply str
+           (interpose "/"
              (map normalize-url (into [] parts))))
         qualified-resource (name resource)]
     (str endpoint qualified-resource "/" nested-url-parts)))
@@ -55,15 +55,16 @@
                           (let [resource-endpoint
                             (-> (partial resource-url (name resource))
                                 (apply url-identifiers))]
-    (run-request method 
-                 resource-endpoint 
-                 token 
+    (run-request method
+                 resource-endpoint
+                 token
                  (into {} params))))]
   (fn
     ([token]
       (request-builder token [] {}))
     ([token resource-identifier & params]
-      (request-builder token [resource-identifier] (into {} params))))))
+     (request-builder token [resource-identifier]
+                      (into {} params))))))
 
 (def domains
   "Fetch all domains"
@@ -77,9 +78,12 @@
   "Return all records for a domain"
   [token domain]
   (run-request :get
-    (resource-url (str "domains/" domain "/records"))
+    (resource-url :domains domain "/records"))
       token))
 
+;; *********************************************
+;; Droplets
+;; *********************************************
 (def droplets
   "Get all droplets"
   (generic :get :droplets))
@@ -94,7 +98,7 @@
 
 (def delete-droplet
   "Delete a droplet by ID
-  (delete-droplet <token> dropletID) => nil (if it has been deleted successfully)"
+  (delete-droplet <token> id) => nil (if it has been deleted successfully)"
   (generic :delete :droplets))
 
 (def images "Return all images"
