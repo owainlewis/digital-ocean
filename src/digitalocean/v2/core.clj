@@ -78,8 +78,8 @@
   "Return all records for a domain"
   [token domain]
   (run-request :get
-    (resource-url :domains domain "/records"))
-      token))
+     (resource-url :domains domain "/records")
+     token))
 
 ;; *********************************************
 ;; Droplets
