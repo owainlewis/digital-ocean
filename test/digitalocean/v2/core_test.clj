@@ -13,7 +13,7 @@
 (defn- with-test-server [handler f]
   (let [port (free-port)
         stop (server/run-server handler {:port port})
-        client (do/client "dop_v1_test"
+        client (do/client "test-token"
                           {:endpoint (str "http://127.0.0.1:" port "/v2")})]
     (try
       (f client)
@@ -67,7 +67,7 @@
         (let [request @seen]
           (is (= :get (:request-method request)))
           (is (= "/v2/droplets" (:uri request)))
-          (is (= "Bearer dop_v1_test"
+          (is (= "Bearer test-token"
                  (get-in request [:headers "authorization"])))
           (is (= {"page" "2"
                   "per_page" "100"

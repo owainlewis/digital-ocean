@@ -3,6 +3,8 @@
 A small Clojure client for the [DigitalOcean API v2](https://docs.digitalocean.com/reference/api/).
 
 The library focuses on the modern control-plane API at `https://api.digitalocean.com/v2`.
+DigitalOcean V1 support was removed in `2.0.0`.
+
 It gives you:
 
 - simple helpers for common resources like Droplets, domains, SSH keys, images, regions, sizes, tags, projects, and VPCs
@@ -153,14 +155,10 @@ pagination links in `:links :pages`.
 ```bash
 lein test
 clojure -M:test
+lein check
 ```
 
 Tests run against a local HTTP server. They do not call DigitalOcean.
-
-## V1 API
-
-The old DigitalOcean V1 API is obsolete. The legacy namespaces remain in `digitalocean.v1.*`
-for old callers, but new code should use `digitalocean.v2.core`.
 
 ## License
 
