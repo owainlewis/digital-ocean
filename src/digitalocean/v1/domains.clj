@@ -1,5 +1,5 @@
 (ns digitalocean.v1.domains
-  (require [digitalocean.v1.core :as core]))
+  (:require [digitalocean.v1.core :as core]))
 
 (defn domains
   "This method returns all of your current domains"

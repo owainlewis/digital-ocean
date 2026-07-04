@@ -1,8 +1,8 @@
 (ns digitalocean.v1.events
-  (require [digitalocean.v1.core :as core]))
+  (:require [digitalocean.v1.core :as core]))
 
 (defn wait-seconds [seconds]
-  (Thread/sleep (* 1000 seconds)))
+  (Thread/sleep (long (* 1000 seconds))))
 
 
 (defn event

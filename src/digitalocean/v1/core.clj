@@ -2,7 +2,7 @@
   ^{:doc "A Clojure wrapper for the Digital Ocean API"
     :author "Owain Lewis"}
   (:require [cheshire.core :as json]
-	    [schema.core :as scm]
+	    [clojure.set :as set]
 	    [org.httpkit.client :as http]))
 
 (defonce digital-ocean "https://api.digitalocean.com")
@@ -20,8 +20,6 @@
 (defn env
   "Fetch an env var"
   [k] (System/getenv k))
-
-(def CredsType (scm/enum :client :key))
 
 (defn make-creds
   "Utility function for building a credentials map"
@@ -115,7 +113,7 @@
        (do ~@body)
 	 (let [missing-params#
 		(into []
-		  (clojure.set/difference
+		  (set/difference
 		    (set ~keys)
 		    (set (keys ~subject-map))))
 	       key-list# (apply str

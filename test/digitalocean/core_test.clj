@@ -1,7 +1,9 @@
 (ns digitalocean.core-test
-  (:use midje.sweet)
-  (:require [digitalocean.v2.core :as do]))
+  (:refer-clojure :exclude [keys])
+  (:require [clojure.test :refer [deftest is]]
+            [digitalocean.core :as do]))
 
-(facts "about resource urls"
-  (do/resource-url :domains 1 2 3) => "https://api.digitalocean.com/v2/domains/1/2/3"
-  (do/resource-url :domains) => "https://api.digitalocean.com/v2/domains/")
+(deftest top-level-namespace-re-exports-v2-api
+  (is (= "https://api.digitalocean.com/v2/tags/PROD"
+         (do/resource-url :tags "PROD")))
+  (is (fn? do/keys)))

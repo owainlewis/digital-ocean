@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Set up Clojure
+        uses: DeLaGuardo/setup-clojure@13.4
+        with:
+          cli: latest
+          lein: latest
+
+      - name: Run Leiningen tests
+        run: lein test
+
+      - name: Run Clojure CLI tests
+        run: clojure -M:test
+
+      - name: Compile namespaces
+        run: lein check
