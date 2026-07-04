@@ -1,8 +1,9 @@
 (ns digitalocean.v2.core
   (:refer-clojure :exclude [keys])
   (:require [cheshire.core :as json]
+            [clj-http.client :as http]
             [clojure.string :as str]
-            [org.httpkit.client :as http])
+            [clojure.walk :as walk])
   (:import [java.net URLEncoder]
            [java.nio.charset StandardCharsets]))
 
@@ -22,7 +23,8 @@
    (merge {:token token
            :endpoint *endpoint*
            :timeout default-timeout-ms
-           :headers {}}
+           :headers {}
+           :request-options {}}
           opts)))
 
 (def make-client client)
@@ -96,6 +98,17 @@
   (when-not (str/blank? (str body))
     (json/parse-string body true)))
 
+(defn- lower-case-keys [m]
+  (walk/postwalk
+   (fn [x]
+     (if (map? x)
+       (into {}
+             (map (fn [[k v]]
+                    [(if (string? k) (str/lower-case k) k) v]))
+             x)
+       x))
+   m))
+
 (defn- header-value [headers header-name]
   (let [lower-name (str/lower-case header-name)]
     (or (get headers header-name)
@@ -139,18 +152,23 @@
                              "Authorization" (str "Bearer " (:token client))}
                             (:headers client)
                             headers)
-         opts (cond-> {:method method
-                       :url (request-url client path)
-                       :headers req-headers
-                       :timeout (or timeout (:timeout client))}
+         timeout-ms (or timeout (:timeout client))
+         opts (cond-> (merge (:request-options client)
+                             {:method method
+                              :url (request-url client path)
+                              :headers req-headers
+                              :throw-exceptions false
+                              :as :text
+                              :connection-timeout timeout-ms
+                              :socket-timeout timeout-ms})
                 (seq query) (assoc :query-params (normalize-api-data query))
                 (some? body) (assoc :body (json/generate-string
                                            (normalize-api-data body))))
-         {:keys [status headers body error]} @(http/request opts)
+         {:keys [status headers body error]} (http/request opts)
          parsed-body (parse-json body)
          response {:ok? (and status (<= 200 status 299))
                    :status status
-                   :headers headers
+                   :headers (lower-case-keys headers)
                    :rate-limit (rate-limit headers)
                    :body parsed-body}]
      (if error
@@ -312,6 +330,12 @@
 (def create-project (generic :post :projects))
 (def update-project (generic :patch :projects))
 (def delete-project (generic :delete :projects))
+
+(def databases (generic :get :databases))
+(def get-database databases)
+(def create-database (generic :post :databases))
+(def update-database (generic :patch :databases))
+(def delete-database (generic :delete :databases))
 
 (def vpcs (generic :get :vpcs))
 (def get-vpc vpcs)

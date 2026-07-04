@@ -122,6 +122,29 @@
         (is (= {:account {:droplet_limit 25}}
                (:body response)))))))
 
+(deftest request-options-support-http-proxies
+  (let [seen (promise)]
+    (with-test-server
+      (fn [request]
+        (deliver seen request)
+        (json-response {:account {}}))
+      (fn [client]
+        (let [proxied-client (assoc client
+                                    :endpoint "http://digitalocean.test/v2"
+                                    :request-options
+                                    {:proxy-host "127.0.0.1"
+                                     :proxy-port (-> client :endpoint
+                                                     (str/split #":")
+                                                     last
+                                                     (str/split #"/")
+                                                     first
+                                                     parse-long)})]
+          (is (= {:account {}} (do/account proxied-client)))
+          (let [request @seen]
+            (is (= :get (:request-method request)))
+            (is (= "digitalocean.test" (get-in request [:headers "host"])))
+            (is (= "http://digitalocean.test/v2/account" (:uri request)))))))))
+
 (deftest request-bang-throws-on-api-errors
   (with-test-server
     (fn [_]
@@ -158,3 +181,14 @@
         (is (= [{:id 1} {:id 2}]
                (do/all-droplets client)))
         (is (= [1 2] @pages))))))
+
+(deftest databases-helper-uses-databases-endpoint
+  (let [seen (promise)]
+    (with-test-server
+      (fn [request]
+        (deliver seen request)
+        (json-response {:databases [{:id "db-1"}]}))
+      (fn [client]
+        (is (= {:databases [{:id "db-1"}]}
+               (do/databases client)))
+        (is (= "/v2/databases" (:uri @seen)))))))

@@ -12,6 +12,7 @@ It gives you:
 - automatic JSON encoding and decoding
 - Clojure keyword support for API fields, including `:per-page` to `per_page`
 - pagination helpers for list endpoints
+- proxy support through `clj-http` request options
 - useful error data through `ex-info`
 
 ## Install
@@ -44,6 +45,15 @@ You can also pass a token string directly to every function:
 
 ```clojure
 (do/droplets (System/getenv "DIGITALOCEAN_TOKEN"))
+```
+
+Proxy options can be passed through to `clj-http`:
+
+```clojure
+(def proxied-client
+  (do/client (System/getenv "DIGITALOCEAN_TOKEN")
+    {:request-options {:proxy-host "127.0.0.1"
+                       :proxy-port 3128}}))
 ```
 
 ## Droplets
@@ -114,6 +124,7 @@ You can also pass a token string directly to every function:
 (do/sizes client)
 (do/tags client)
 (do/projects client)
+(do/databases client)
 (do/vpcs client)
 ```
 

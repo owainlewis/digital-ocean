@@ -1,7 +1,8 @@
 {:paths ["src"]
  :deps {org.clojure/clojure {:mvn/version "1.12.0"}
         cheshire/cheshire {:mvn/version "5.13.0"}
-        http-kit/http-kit {:mvn/version "2.8.0"}}
+        clj-http/clj-http {:mvn/version "3.13.1"}}
  :aliases
  {:test {:extra-paths ["test"]
+         :extra-deps {http-kit/http-kit {:mvn/version "2.8.0"}}
          :main-opts ["-m" "digitalocean.test-runner"]}}}
