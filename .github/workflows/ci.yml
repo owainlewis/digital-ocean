@@ -2,41 +2,101 @@ name: CI
 
 on:
   push:
-    branches:
-      - master
-      - main
+    branches: [master]
   pull_request:
 
 permissions:
   contents: read
 
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    name: Test
+    name: Java ${{ matrix.java }} / Clojure ${{ matrix.clojure }}
     runs-on: ubuntu-latest
-
+    strategy:
+      fail-fast: false
+      matrix:
+        java: [11, 17, 21]
+        clojure: ["1.11", "1.12"]
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Java
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: ${{ matrix.java }}
           cache: maven
-
-      - name: Set up Clojure
-        uses: DeLaGuardo/setup-clojure@13.4
+          cache-dependency-path: project.clj
+      - uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74 # 13.7.0
         with:
-          cli: latest
-          lein: latest
+          lein: 2.11.2
+      - name: Run tests
+        run: |
+          if [[ "${{ matrix.clojure }}" == "1.12" ]]; then
+            lein with-profile +clojure-1.12 test
+          else
+            lein test
+          fi
 
-      - name: Run Leiningen tests
-        run: lein test
+  quality:
+    name: Quality and package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          cache-dependency-path: project.clj
+      - uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74 # 13.7.0
+        with:
+          lein: 2.11.2
+          clj-kondo: 2026.05.25
+      - name: Check formatting
+        run: lein cljfmt check
+      - name: Compile and validate namespaces
+        run: lein check
+      - name: Lint
+        run: clj-kondo --lint src test --fail-level error
+      - name: Test package build
+        run: lein jar
 
-      - name: Run Clojure CLI tests
+  clojure-cli:
+    name: Clojure CLI
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@03ad4de0992f5dab5e18fcb136590ce7c4a0ac95 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: DeLaGuardo/setup-clojure@4c7a6f613e5089821bb3bb2a33a3ee115578580d # 13.6.1
+        with:
+          cli: 1.12.5.1654
+      - name: Run tests with deps.edn
         run: clojure -M:test
 
-      - name: Compile namespaces
-        run: lein check
+  security:
+    name: Dependency security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74 # 13.7.0
+        with:
+          lein: 2.11.2
+      - name: Generate dependency manifest
+        run: lein pom
+      - name: Scan dependencies
+        uses: google/osv-scanner-action/osv-scanner-action@8e5cf47b818121e8b405931c82126c2630b0b20d # v2.3.8
+        with:
+          scan-args: |-
+            --no-ignore
+            --no-resolve
+            ./

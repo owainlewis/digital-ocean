@@ -1,0 +1,33 @@
+name: Dependency freshness
+
+on:
+  schedule:
+    - cron: "23 7 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  antq:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-java@de7274f081f381c8f8158605e0321c36c376e2e6 # v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: DeLaGuardo/setup-clojure@6d46099eae24853c33c0482f2bb54edf4f1a4c74 # 13.7.0
+        with:
+          cli: 1.12.5.1654
+      - name: Report outdated dependencies
+        run: |
+          # antq exits non-zero when it finds outdated dependencies, so capture
+          # the report first and fail afterwards with it in the log.
+          output=$(clojure -Sdeps '{:deps {com.github.liquidz/antq {:mvn/version "2.11.1276"}}}' \
+            -M -m antq.core --skip=github-action --exclude=org.clojure/clojure \
+            '--error-format=::error file={{file}}::{{name}} {{version}} -> {{latest-version}}') || true
+          if [[ -n "$output" ]]; then
+            echo "$output"
+            exit 1
+          fi

@@ -1,6 +1,6 @@
 {:paths ["src"]
- :deps {org.clojure/clojure {:mvn/version "1.12.0"}
-        cheshire/cheshire {:mvn/version "5.13.0"}
+ :deps {org.clojure/clojure {:mvn/version "1.11.4"}
+        cheshire/cheshire {:mvn/version "6.2.0"}
         clj-http/clj-http {:mvn/version "3.13.1"}}
  :aliases
  {:test {:extra-paths ["test"]

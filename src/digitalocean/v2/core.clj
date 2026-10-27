@@ -94,9 +94,22 @@
     (sequential? value) (mapv normalize-api-data value)
     :else value))
 
-(defn- parse-json [body]
+(defn- json-content-type? [content-type]
+  (or (str/blank? (str content-type))
+      (str/includes? (str/lower-case (str content-type)) "json")))
+
+(defn- parse-body
+  "Parse JSON bodies into keywordized maps. Non-JSON bodies, such as the YAML
+  returned by the Kubernetes kubeconfig endpoint or an HTML error page from a
+  proxy, are returned as text."
+  [content-type body]
   (when-not (str/blank? (str body))
-    (json/parse-string body true)))
+    (if (json-content-type? content-type)
+      (try
+        (json/parse-string body true)
+        (catch com.fasterxml.jackson.core.JsonProcessingException _
+          body))
+      body)))
 
 (defn- lower-case-keys [m]
   (walk/postwalk
@@ -165,7 +178,7 @@
                 (some? body) (assoc :body (json/generate-string
                                            (normalize-api-data body))))
          {:keys [status headers body error]} (http/request opts)
-         parsed-body (parse-json body)
+         parsed-body (parse-body (header-value headers "content-type") body)
          response {:ok? (and status (<= 200 status 299))
                    :status status
                    :headers (lower-case-keys headers)
@@ -346,8 +359,11 @@
 (defn list-all
   "Fetch every page for a collection endpoint.
 
+  `collection-key` is the key of the list in the response body. Response keys
+  keep DigitalOcean's snake_case spelling.
+
   (list-all client :droplets :droplets)
-  (list-all client [:domains \"example.com\" :records] :domain-records)"
+  (list-all client [:domains \"example.com\" :records] :domain_records)"
   ([client resource collection-key]
    (list-all client resource collection-key {}))
   ([client resource collection-key params]
@@ -377,3 +393,161 @@
 (defn all-sizes
   ([client] (all-sizes client {}))
   ([client params] (list-all client :sizes :sizes params)))
+
+(defn all-volumes
+  ([client] (all-volumes client {}))
+  ([client params] (list-all client :volumes :volumes params)))
+
+(defn all-ssh-keys
+  ([client] (all-ssh-keys client {}))
+  ([client params] (list-all client "account/keys" :ssh_keys params)))
+
+;; Block storage
+
+(def volumes (generic :get :volumes))
+(def get-volume volumes)
+(def create-volume (generic :post :volumes))
+(def delete-volume (generic :delete :volumes))
+
+(defn volume-action
+  "Run an action against a volume, e.g. attach, detach or resize.
+
+  (volume-action client \"vol-id\" :attach {:droplet-id 123 :region \"lon1\"})"
+  ([client volume-id action]
+   (volume-action client volume-id action {}))
+  ([client volume-id action params]
+   (request! client :post [:volumes volume-id :actions]
+             {:body (assoc params :type (api-key-name action))})))
+
+(defn attach-volume [client volume-id droplet-id region]
+  (volume-action client volume-id :attach {:droplet-id droplet-id :region region}))
+
+(defn detach-volume [client volume-id droplet-id region]
+  (volume-action client volume-id :detach {:droplet-id droplet-id :region region}))
+
+;; Networking
+
+(def load-balancers (generic :get "load_balancers"))
+(def get-load-balancer load-balancers)
+(def create-load-balancer (generic :post "load_balancers"))
+(def update-load-balancer (generic :put "load_balancers"))
+(def delete-load-balancer (generic :delete "load_balancers"))
+
+(def firewalls (generic :get :firewalls))
+(def get-firewall firewalls)
+(def create-firewall (generic :post :firewalls))
+(def update-firewall (generic :put :firewalls))
+(def delete-firewall (generic :delete :firewalls))
+
+(def reserved-ips (generic :get "reserved_ips"))
+(def get-reserved-ip reserved-ips)
+(def create-reserved-ip (generic :post "reserved_ips"))
+(def delete-reserved-ip (generic :delete "reserved_ips"))
+
+(defn assign-reserved-ip
+  "Assign a reserved IP to a Droplet."
+  [client ip droplet-id]
+  (request! client :post ["reserved_ips" ip :actions]
+            {:body {:type "assign" :droplet-id droplet-id}}))
+
+(defn unassign-reserved-ip
+  "Unassign a reserved IP from its Droplet."
+  [client ip]
+  (request! client :post ["reserved_ips" ip :actions]
+            {:body {:type "unassign"}}))
+
+(def certificates (generic :get :certificates))
+(def get-certificate certificates)
+(def create-certificate (generic :post :certificates))
+(def delete-certificate (generic :delete :certificates))
+
+(def cdn-endpoints (generic :get "cdn/endpoints"))
+(def get-cdn-endpoint cdn-endpoints)
+(def create-cdn-endpoint (generic :post "cdn/endpoints"))
+(def update-cdn-endpoint (generic :put "cdn/endpoints"))
+(def delete-cdn-endpoint (generic :delete "cdn/endpoints"))
+
+;; Kubernetes
+
+(def kubernetes-clusters (generic :get "kubernetes/clusters"))
+(def get-kubernetes-cluster kubernetes-clusters)
+(def create-kubernetes-cluster (generic :post "kubernetes/clusters"))
+(def update-kubernetes-cluster (generic :put "kubernetes/clusters"))
+(def delete-kubernetes-cluster (generic :delete "kubernetes/clusters"))
+
+(defn kubeconfig
+  "Return the kubeconfig YAML for a cluster as a string."
+  [client cluster-id]
+  (request! client :get ["kubernetes/clusters" cluster-id :kubeconfig]
+            {:headers {"Accept" "application/yaml"}}))
+
+(defn kubernetes-node-pools [client cluster-id]
+  (request! client :get ["kubernetes/clusters" cluster-id "node_pools"]))
+
+;; App Platform
+
+(def apps (generic :get :apps))
+(def get-app apps)
+(def create-app (generic :post :apps))
+(def update-app (generic :put :apps))
+(def delete-app (generic :delete :apps))
+
+(defn app-deployments [client app-id]
+  (request! client :get [:apps app-id :deployments]))
+
+(defn create-app-deployment
+  "Trigger a new deployment of an app."
+  ([client app-id] (create-app-deployment client app-id {}))
+  ([client app-id params]
+   (request! client :post [:apps app-id :deployments] {:body params})))
+
+;; Container registry, Spaces keys and uptime checks
+
+(defn registry [client]
+  (request! client :get [:registry]))
+
+(def spaces-keys (generic :get "spaces/keys"))
+(def create-spaces-key (generic :post "spaces/keys"))
+(def delete-spaces-key (generic :delete "spaces/keys"))
+
+(def uptime-checks (generic :get "uptime/checks"))
+(def get-uptime-check uptime-checks)
+(def create-uptime-check (generic :post "uptime/checks"))
+(def update-uptime-check (generic :put "uptime/checks"))
+(def delete-uptime-check (generic :delete "uptime/checks"))
+
+;; Waiting for actions
+
+(defn- action-id [action]
+  (cond
+    (map? action) (or (get-in action [:action :id]) (:id action))
+    :else action))
+
+(defn wait-for-action
+  "Poll an action until it completes and return the final action map.
+
+  `action` is an action id, an action map, or the response from an action
+  helper such as `reboot-droplet`. Throws ex-info if the action errors or
+  does not finish within :timeout-ms.
+
+  Options:
+    :timeout-ms   default 300000 (5 minutes)
+    :interval-ms  default 2000"
+  [client action & {:keys [timeout-ms interval-ms]
+                    :or {timeout-ms 300000 interval-ms 2000}}]
+  (let [id (action-id action)
+        deadline (+ (System/currentTimeMillis) timeout-ms)]
+    (when-not id
+      (throw (ex-info "Expected an action id or action map"
+                      {:type :invalid-action :value action})))
+    (loop []
+      (let [current (:action (request! client :get [:actions id]))]
+        (case (:status current)
+          "completed" current
+          "errored" (throw (ex-info (str "DigitalOcean action " id " errored")
+                                    {:type :action-errored :action current}))
+          (if (< (System/currentTimeMillis) deadline)
+            (do (Thread/sleep (long interval-ms))
+                (recur))
+            (throw (ex-info (str "Timed out waiting for DigitalOcean action " id)
+                            {:type :action-timeout :action current}))))))))
