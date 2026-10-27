@@ -192,3 +192,100 @@
         (is (= {:databases [{:id "db-1"}]}
                (do/databases client)))
         (is (= "/v2/databases" (:uri @seen)))))))
+
+(deftest non-json-bodies-are-returned-as-text
+  (with-test-server
+    (fn [request]
+      (is (= "/v2/kubernetes/clusters/k8s-1/kubeconfig" (:uri request)))
+      {:status 200
+       :headers {"content-type" "application/yaml"}
+       :body "apiVersion: v1\nkind: Config\n"})
+    (fn [client]
+      (is (= "apiVersion: v1\nkind: Config\n"
+             (do/kubeconfig client "k8s-1"))))))
+
+(deftest html-error-pages-do-not-break-error-handling
+  (with-test-server
+    (fn [_]
+      {:status 502
+       :headers {"content-type" "text/html"}
+       :body "<html>Bad Gateway</html>"})
+    (fn [client]
+      (try
+        (do/account client)
+        (is false "expected ex-info")
+        (catch clojure.lang.ExceptionInfo e
+          (is (= "DigitalOcean API request failed with HTTP 502" (.getMessage e)))
+          (is (= "<html>Bad Gateway</html>" (:body (ex-data e)))))))))
+
+(deftest resource-helpers-use-api-paths
+  (let [seen (atom [])]
+    (with-test-server
+      (fn [request]
+        (swap! seen conj [(:request-method request) (:uri request)])
+        (json-response {}))
+      (fn [client]
+        (do/load-balancers client)
+        (do/get-firewall client "fw-1")
+        (do/update-kubernetes-cluster client "k8s-1" {:name "prod"})
+        (do/reserved-ips client)
+        (do/delete-app client "app-1")
+        (do/cdn-endpoints client)
+        (do/uptime-checks client)
+        (do/spaces-keys client)
+        (do/registry client)
+        (is (= [[:get "/v2/load_balancers"]
+                [:get "/v2/firewalls/fw-1"]
+                [:put "/v2/kubernetes/clusters/k8s-1"]
+                [:get "/v2/reserved_ips"]
+                [:delete "/v2/apps/app-1"]
+                [:get "/v2/cdn/endpoints"]
+                [:get "/v2/uptime/checks"]
+                [:get "/v2/spaces/keys"]
+                [:get "/v2/registry"]]
+               @seen))))))
+
+(deftest action-helpers-send-typed-bodies
+  (let [seen (atom [])]
+    (with-test-server
+      (fn [request]
+        (swap! seen conj {:uri (:uri request)
+                          :body (json/parse-string (slurp (:body request)) true)})
+        (json-response 201 {:action {:id 1 :status "in-progress"}}))
+      (fn [client]
+        (do/attach-volume client "vol-1" 123 "lon1")
+        (do/assign-reserved-ip client "203.0.113.10" 123)
+        (is (= [{:uri "/v2/volumes/vol-1/actions"
+                 :body {:type "attach" :droplet_id 123 :region "lon1"}}
+                {:uri "/v2/reserved_ips/203.0.113.10/actions"
+                 :body {:type "assign" :droplet_id 123}}]
+               @seen))))))
+
+(deftest wait-for-action-polls-until-completed
+  (let [polls (atom 0)]
+    (with-test-server
+      (fn [request]
+        (is (= "/v2/actions/42" (:uri request)))
+        (json-response {:action {:id 42
+                                 :status (if (< (swap! polls inc) 3)
+                                           "in-progress"
+                                           "completed")}}))
+      (fn [client]
+        (is (= {:id 42 :status "completed"}
+               (do/wait-for-action client {:action {:id 42 :status "in-progress"}}
+                                   :interval-ms 1)))
+        (is (= 3 @polls))))))
+
+(deftest wait-for-action-throws-on-error-and-timeout
+  (with-test-server
+    (fn [_]
+      (json-response {:action {:id 7 :status "errored"}}))
+    (fn [client]
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"action 7 errored"
+                            (do/wait-for-action client 7 :interval-ms 1)))))
+  (with-test-server
+    (fn [_]
+      (json-response {:action {:id 8 :status "in-progress"}}))
+    (fn [client]
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo #"Timed out"
+                            (do/wait-for-action client 8 :interval-ms 1 :timeout-ms 20))))))

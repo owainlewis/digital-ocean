@@ -1,5 +1,8 @@
 # digital-ocean
 
+[![CI](https://github.com/owainlewis/digital-ocean/actions/workflows/ci.yml/badge.svg)](https://github.com/owainlewis/digital-ocean/actions/workflows/ci.yml)
+[![Clojars Project](https://img.shields.io/clojars/v/digitalocean.svg)](https://clojars.org/digitalocean)
+
 A small Clojure client for the [DigitalOcean API v2](https://docs.digitalocean.com/reference/api/).
 
 The library focuses on the modern control-plane API at `https://api.digitalocean.com/v2`.
@@ -7,7 +10,8 @@ DigitalOcean V1 support was removed in `2.0.0`.
 
 It gives you:
 
-- simple helpers for common resources like Droplets, domains, SSH keys, images, regions, sizes, tags, projects, and VPCs
+- simple helpers for common resources: Droplets, volumes, domains, SSH keys, images, snapshots, regions, sizes, tags, projects, VPCs, databases, load balancers, firewalls, reserved IPs, certificates, CDN endpoints, Kubernetes, App Platform, the container registry, Spaces keys and uptime checks
+- `wait-for-action` to block until a Droplet or volume action finishes
 - a low-level `request` function for any DigitalOcean endpoint
 - automatic JSON encoding and decoding
 - Clojure keyword support for API fields, including `:per-page` to `per_page`
@@ -16,6 +20,8 @@ It gives you:
 - useful error data through `ex-info`
 
 ## Install
+
+Version 2 is not on Clojars yet. Build it locally with `lein install` to try it.
 
 Leiningen:
 
@@ -91,6 +97,45 @@ Proxy options can be passed through to `clj-http`:
 (do/delete-droplet client 123456)
 ```
 
+Wait for an action to finish:
+
+```clojure
+(->> (do/power-off-droplet client 123456)
+     (do/wait-for-action client))
+;; => {:id 36804636 :status "completed" :type "power_off" ...}
+```
+
+## Volumes
+
+```clojure
+(do/create-volume client {:name "data"
+                          :region "lon1"
+                          :size-gigabytes 100})
+(do/attach-volume client "volume-id" 123456 "lon1")
+(do/detach-volume client "volume-id" 123456 "lon1")
+```
+
+## Networking
+
+```clojure
+(do/load-balancers client)
+(do/firewalls client)
+(do/create-reserved-ip client {:region "lon1"})
+(do/assign-reserved-ip client "203.0.113.10" 123456)
+(do/certificates client)
+(do/cdn-endpoints client)
+```
+
+## Kubernetes and App Platform
+
+```clojure
+(do/kubernetes-clusters client)
+(spit "kubeconfig.yaml" (do/kubeconfig client "cluster-id"))
+
+(do/apps client)
+(do/create-app-deployment client "app-id")
+```
+
 ## Domains And Records
 
 ```clojure
@@ -126,6 +171,9 @@ Proxy options can be passed through to `clj-http`:
 (do/projects client)
 (do/databases client)
 (do/vpcs client)
+(do/registry client)
+(do/spaces-keys client)
+(do/uptime-checks client)
 ```
 
 ## Any Endpoint
@@ -140,6 +188,11 @@ Use `request` when you want the full response envelope:
 ;;     :rate-limit {:limit 5000 :remaining 4999 :reset 1720000000}
 ;;     :body {:snapshots [...]}}
 ```
+
+JSON bodies are parsed into maps with keyword keys. Keys keep DigitalOcean's
+snake_case spelling, for example `:domain_records`. Request keys are converted
+the other way, so `:per-page` is sent as `per_page`. Non-JSON responses, such
+as a kubeconfig, are returned as strings.
 
 Use `request!` when you want the parsed body or an exception:
 
@@ -161,15 +214,17 @@ pagination links in `:links :pages`.
 (do/list-all client [:domains "example.com" :records] :domain_records)
 ```
 
-## Tests
+## Development
 
 ```bash
 lein test
 clojure -M:test
+lein cljfmt check
 lein check
 ```
 
-Tests run against a local HTTP server. They do not call DigitalOcean.
+Tests run against a local HTTP server. They do not call DigitalOcean. See
+[CONTRIBUTING.md](CONTRIBUTING.md) and [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
